@@ -1,6 +1,7 @@
 package groupHandler
 
 import (
+	"fmt"
 	"github.com/valyala/fasthttp"
 )
 
@@ -27,8 +28,10 @@ func NewHandler(groupService groupService, groupTransport groupTransport, errorW
 }
 
 func (h *handler) Create(ctx *fasthttp.RequestCtx) {
+	fmt.Println("New incoming request: POST /group/group")
 	group, err := h.groupTransport.CreateDecode(ctx)
 	if err != nil {
+		fmt.Println("Create: cannot decode request")
 		err = h.errorWorker.ServeJSONError(ctx, err)
 		if err != nil {
 			h.errorWorker.ServeFatalError(ctx)
@@ -38,6 +41,7 @@ func (h *handler) Create(ctx *fasthttp.RequestCtx) {
 
 	groupReturn, err := h.groupService.Create(group)
 	if err != nil {
+		fmt.Println("Create: bad usecase: ", err)
 		err = h.errorWorker.ServeJSONError(ctx, err)
 		if err != nil {
 			h.errorWorker.ServeFatalError(ctx)
@@ -47,6 +51,7 @@ func (h *handler) Create(ctx *fasthttp.RequestCtx) {
 
 	err = h.groupTransport.CreateEncode(groupReturn, ctx)
 	if err != nil {
+		fmt.Println("Create: cannot encode response: ", err)
 		err = h.errorWorker.ServeJSONError(ctx, err)
 		if err != nil {
 			h.errorWorker.ServeFatalError(ctx)
