@@ -48,4 +48,4 @@ ENV GIT_BRANCH="main"
 #CMD ["/main >> /solar_main.log"]
 #CMD "/bin/sh -c ls /"
 #CMD "/bin/sh"
-CMD /run.sh /main /var/log/solar_$GIT_BRANCH.log
+CMD /run.sh /main /var/log/solar_groups_$GIT_BRANCH.log
