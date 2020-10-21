@@ -10,7 +10,7 @@ type Service interface {
 	Update(group models.Group, userID int) (response models.Group, err error)
 	Delete(groupID, userID int) (response models.Group, err error)
 	Get(groupID, userID int) (response models.Group, err error)
-	GetList(userID int) (response []models.Group, err error)
+	GetList(userID int) (response []models.GroupPreview, err error)
 }
 
 type service struct {
@@ -133,6 +133,8 @@ func (s *service) Get(groupID, userID int) (response models.Group, err error) {
 	return
 }
 
-func (s *service) GetList(userID int) (response []models.Group, err error) {
-	panic("implement me")
+func (s *service) GetList(userID int) (response []models.GroupPreview, err error) {
+	response, err = s.groupStorage.SelectGroupsByUserID(userID)
+
+	return
 }

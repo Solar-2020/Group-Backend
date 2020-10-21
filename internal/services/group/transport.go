@@ -21,7 +21,7 @@ type Transport interface {
 	GetEncode(response models.Group, ctx *fasthttp.RequestCtx) (err error)
 
 	GetListDecode(ctx *fasthttp.RequestCtx) (userID int, err error)
-	GetListEncode(response []models.Group, ctx *fasthttp.RequestCtx) (err error)
+	GetListEncode(response []models.GroupPreview, ctx *fasthttp.RequestCtx) (err error)
 }
 
 type transport struct {
@@ -137,7 +137,7 @@ func (t transport) GetListDecode(ctx *fasthttp.RequestCtx) (userID int, err erro
 	return
 }
 
-func (t transport) GetListEncode(response []models.Group, ctx *fasthttp.RequestCtx) (err error) {
+func (t transport) GetListEncode(response []models.GroupPreview, ctx *fasthttp.RequestCtx) (err error) {
 	body, err := json.Marshal(response)
 	if err != nil {
 		return

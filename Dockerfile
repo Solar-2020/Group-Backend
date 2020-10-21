@@ -33,8 +33,6 @@ FROM alpine
 
 COPY --from=builder /dist/main /
 
-#ENV PORT = 8098
-
 EXPOSE 8098
 
 ADD ./scripts/run.sh /run.sh

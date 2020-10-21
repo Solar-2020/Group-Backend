@@ -16,7 +16,7 @@ jobs:
       - name: Build Docker image
         run: docker build -t tamerlanchik/solar_group_${GITHUB_REF##*/} .
       - name: Push the image
-        run: docker push tamerlanchik/solar${GITHUB_REF##*/}
+        run: docker push tamerlanchik/solar_group_${GITHUB_REF##*/}
 
   deploy:
     runs-on: ubuntu-latest
