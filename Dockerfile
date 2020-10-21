@@ -33,7 +33,7 @@ FROM alpine
 
 COPY --from=builder /dist/main /
 
-ENV PORT = 8098
+# ENV PORT = 8098
 
 EXPOSE 8098
 
