@@ -16,4 +16,6 @@ type groupStorage interface {
 	SelectGroupByID(groupID int) (group models.Group, err error)
 
 	SelectGroupRole(groupID, userID int) (roleID int, err error)
+
+	SelectGroupsByUserID(userID int) (group []models.GroupPreview, err error)
 }

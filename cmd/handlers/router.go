@@ -22,6 +22,8 @@ func NewFastHttpRouter(group groupHandler.Handler, middleware Middleware) *fasth
 	router.Handle("GET", "/group/group/:groupID", middleware.CORS(group.Get))
 	router.Handle("GET", "/group/list", middleware.CORS(group.GetList))
 
+
+
 	return router
 }
 

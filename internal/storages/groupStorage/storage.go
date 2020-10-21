@@ -21,6 +21,8 @@ type Storage interface {
 	SelectGroupByID(groupID int) (group models.Group, err error)
 
 	SelectGroupRole(groupID, userID int) (roleID int, err error)
+
+	SelectGroupsByUserID(userID int) (group []models.GroupPreview, err error)
 }
 
 type storage struct {
@@ -102,5 +104,37 @@ func (s *storage) InsertUser(groupID, userID, roleID int) (err error) {
 
 	_, err = s.db.Exec(sqlQuery, groupID, userID, roleID)
 
+	return
+}
+
+func (s *storage) SelectGroupsByUserID(userID int) (groups []models.GroupPreview, err error) {
+	const sqlQuery = `
+	SELECT g.id,
+		   g.title,
+		   g.description,
+		   g.url,
+		   g.avatar_url,
+		   r.id,
+		   r.title
+	FROM groups AS g
+			 JOIN users_groups AS ug ON g.id = ug.group_id
+			 JOIN roles AS r ON ug.role_id = r.id
+	WHERE ug.user_id = $1`
+
+	groups = make([]models.GroupPreview, 0)
+	rows, err := s.db.Query(sqlQuery, userID)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var tempGroup models.GroupPreview
+		err = rows.Scan(&tempGroup.ID, &tempGroup.Title, &tempGroup.Description, &tempGroup.URL, &tempGroup.AvatarURL, &tempGroup.UserRoleID, &tempGroup.UserRole)
+		if err != nil {
+			return
+		}
+		tempGroup.UserID = userID
+		groups = append(groups, tempGroup)
+	}
 	return
 }

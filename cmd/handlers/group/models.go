@@ -10,7 +10,7 @@ type groupService interface {
 	Update(request models.Group, userID int) (response models.Group, err error)
 	Delete(groupID, userID int) (response models.Group, err error)
 	Get(groupID, userID int) (response models.Group, err error)
-	GetList(userID int) (response []models.Group, err error)
+	GetList(userID int) (response []models.GroupPreview, err error)
 }
 
 type groupTransport interface {
@@ -27,7 +27,7 @@ type groupTransport interface {
 	GetEncode(response models.Group, ctx *fasthttp.RequestCtx) (err error)
 
 	GetListDecode(ctx *fasthttp.RequestCtx) (userID int, err error)
-	GetListEncode(response []models.Group, ctx *fasthttp.RequestCtx) (err error)
+	GetListEncode(response []models.GroupPreview, ctx *fasthttp.RequestCtx) (err error)
 }
 
 type errorWorker interface {
