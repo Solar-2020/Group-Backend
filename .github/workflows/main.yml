@@ -14,7 +14,7 @@ jobs:
       - name: Branch name
         run: echo running on branch ${GITHUB_REF##*/}
       - name: Build Docker image
-        run: docker build -t tamerlanchik/solar_group_${GITHUB_REF##*/} .
+        run: docker build -t tamerlanchik/solar_group_${GITHUB_REF##*/}:${GITHUB_SHA} .
       - name: Push the image
         run: docker push tamerlanchik/solar_group_${GITHUB_REF##*/}
 
@@ -25,8 +25,8 @@ jobs:
       - name: pull docker image
         uses: appleboy/ssh-action@master
         with:
-          envs: GITHUB_SHA, GITHUB_REF
+          envs: GITHUB_SHA, GITHUB_REF,
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.PRIVATE_KEY }}
-          script: sudo /opt/puppetlabs/bin/puppet apply -t --tags gobackend::group::${GITHUB_REF##*/} /etc/puppetlabs/code/environments/production/manifests/site.pp; [[ "02" == *"${PIPESTATUS[0]}"* ]]
+          script: sudo FACTER_image_tag=${GITHUB_SHA} /opt/puppetlabs/bin/puppet apply -t --tags gobackend::group::${GITHUB_REF##*/} /etc/puppetlabs/code/environments/production/manifests/site.pp; [[ "02" == *"${PIPESTATUS[0]}"* ]]
