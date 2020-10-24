@@ -29,6 +29,9 @@ RUN cp /build/main .
 # Build a small image
 FROM alpine
 
+# for health check
+RUN apk --no-cache add curl
+
 COPY --from=builder /dist/main /
 
 EXPOSE 8098
