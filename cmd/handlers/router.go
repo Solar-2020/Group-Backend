@@ -25,5 +25,10 @@ func NewFastHttpRouter(group groupHandler.Handler, middleware httputils.Middlewa
 	router.Handle("POST", "/group/membership", middlewareChain(group.EditRole))
 	router.Handle("DELETE", "/group/membership", middlewareChain(group.Expel))
 
+	router.Handle("PUT", "/group/invite", middlewareChain(group.AddLink))
+	router.Handle("DELETE", "/group/invite", middlewareChain(group.RemoveLink))
+	router.Handle("POST", "/group/invite/list", middlewareChain(group.ListLinks))
+	router.Handle("POST", "/group/invite/resolve", middlewareChain(group.Resolve))
+
 	return router
 }

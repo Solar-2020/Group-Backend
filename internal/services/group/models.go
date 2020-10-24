@@ -20,4 +20,9 @@ type groupStorage interface {
 	SelectGroupRole(groupID, userID int) (roleID int, err error)
 
 	SelectGroupsByUserID(userID int) (group []models.GroupPreview, err error)
+
+	HashToGroupID(line string) (groupID  int, err error)
+	RemoveLinkToGroup(groupID int, link string) (err error)
+	ListShortLinksToGroup(groupID int) (res []models.GroupInviteLink, err error)
+	AddShortLinkToGroup(groupID int, link string, author int) (err error)
 }

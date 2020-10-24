@@ -18,6 +18,10 @@ type Handler interface {
 	Invite(ctx *fasthttp.RequestCtx)
 	EditRole(ctx *fasthttp.RequestCtx)
 	Expel(ctx *fasthttp.RequestCtx)
+	Resolve(ctx *fasthttp.RequestCtx)
+	AddLink(ctx *fasthttp.RequestCtx)
+	RemoveLink(ctx *fasthttp.RequestCtx)
+	ListLinks(ctx *fasthttp.RequestCtx)
 }
 
 type handler struct {
@@ -35,8 +39,7 @@ func NewHandler(groupService groupService, groupTransport groupTransport, errorW
 }
 
 func (h *handler) Create(ctx *fasthttp.RequestCtx) {
-	fmt.Println("New incoming request: POST /group/group")
-	group, err := h.groupTransport.CreateDecode(ctx)
+	req, err := h.groupTransport.CreateDecode(ctx)
 	if err != nil {
 		fmt.Println("Create: cannot decode request")
 		err = h.errorWorker.ServeJSONError(ctx, err)
@@ -46,7 +49,17 @@ func (h *handler) Create(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	groupReturn, err := h.groupService.Create(group)
+	ctx_ := context.Context{
+		RequestCtx: ctx,
+		Session:    &session.Session{},
+	}
+	err = ctx_.Session.Authorise(ctx, req)
+	if err != nil {
+		h.handleError(err, ctx)
+		return
+	}
+
+	groupReturn, err := h.groupService.Create(ctx_, req)
 	if err != nil {
 		fmt.Println("Create: bad usecase: ", err)
 		err = h.errorWorker.ServeJSONError(ctx, err)
@@ -68,7 +81,7 @@ func (h *handler) Create(ctx *fasthttp.RequestCtx) {
 }
 
 func (h *handler) Update(ctx *fasthttp.RequestCtx) {
-	group, userID, err := h.groupTransport.UpdateDecode(ctx)
+	req, err := h.groupTransport.UpdateDecode(ctx)
 	if err != nil {
 		err = h.errorWorker.ServeJSONError(ctx, err)
 		if err != nil {
@@ -77,7 +90,23 @@ func (h *handler) Update(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	groupReturn, err := h.groupService.Update(group, userID)
+	ctx_ := context.Context{
+		RequestCtx: ctx,
+		Session:    &session.Session{},
+	}
+	err = ctx_.Session.Authorise(ctx, req)
+	if err != nil {
+		h.handleError(err, ctx)
+		return
+	}
+
+	err = h.groupService.CheckPermission(ctx_, req.Group, models.ActionEditRole)
+	if err != nil {
+		h.handleError(err, ctx)
+		return
+	}
+
+	groupReturn, err := h.groupService.Update(ctx_, req)
 	if err != nil {
 		err = h.errorWorker.ServeJSONError(ctx, err)
 		if err != nil {
@@ -97,7 +126,7 @@ func (h *handler) Update(ctx *fasthttp.RequestCtx) {
 }
 
 func (h *handler) Delete(ctx *fasthttp.RequestCtx) {
-	groupID, userID, err := h.groupTransport.DeleteDecode(ctx)
+	req, err := h.groupTransport.DeleteDecode(ctx)
 	if err != nil {
 		err = h.errorWorker.ServeJSONError(ctx, err)
 		if err != nil {
@@ -106,7 +135,23 @@ func (h *handler) Delete(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	group, err := h.groupService.Delete(groupID, userID)
+	ctx_ := context.Context{
+		RequestCtx: ctx,
+		Session:    &session.Session{},
+	}
+	err = ctx_.Session.Authorise(ctx, req)
+	if err != nil {
+		h.handleError(err, ctx)
+		return
+	}
+
+	err = h.groupService.CheckPermission(ctx_, models.Group{ID: req.GroupID}, models.ActionEditRole)
+	if err != nil {
+		h.handleError(err, ctx)
+		return
+	}
+
+	group, err := h.groupService.Delete(ctx_, req)
 	if err != nil {
 		err = h.errorWorker.ServeJSONError(ctx, err)
 		if err != nil {
@@ -126,7 +171,7 @@ func (h *handler) Delete(ctx *fasthttp.RequestCtx) {
 }
 
 func (h *handler) Get(ctx *fasthttp.RequestCtx) {
-	groupID, userID, err := h.groupTransport.GetDecode(ctx)
+	request, err := h.groupTransport.GetDecode(ctx)
 	if err != nil {
 		err = h.errorWorker.ServeJSONError(ctx, err)
 		if err != nil {
@@ -135,7 +180,23 @@ func (h *handler) Get(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	group, err := h.groupService.Get(groupID, userID)
+	ctx_ := context.Context{
+		RequestCtx: ctx,
+		Session:    &session.Session{},
+	}
+	err = ctx_.Session.Authorise(ctx, request)
+	if err != nil {
+		h.handleError(err, ctx)
+		return
+	}
+
+	err = h.groupService.CheckPermission(ctx_, models.Group{ID: request.GroupID}, models.ActionEditRole)
+	if err != nil {
+		h.handleError(err, ctx)
+		return
+	}
+
+	group, err := h.groupService.Get(ctx_, request)
 	if err != nil {
 		err = h.errorWorker.ServeJSONError(ctx, err)
 		if err != nil {
@@ -155,7 +216,7 @@ func (h *handler) Get(ctx *fasthttp.RequestCtx) {
 }
 
 func (h *handler) GetList(ctx *fasthttp.RequestCtx) {
-	userID, err := h.groupTransport.GetListDecode(ctx)
+	request, err := h.groupTransport.GetListDecode(ctx)
 	if err != nil {
 		err = h.errorWorker.ServeJSONError(ctx, err)
 		if err != nil {
@@ -164,7 +225,17 @@ func (h *handler) GetList(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	groupList, err := h.groupService.GetList(userID)
+	ctx_ := context.Context{
+		RequestCtx: ctx,
+		Session:    &session.Session{},
+	}
+	err = ctx_.Session.Authorise(ctx, request)
+	if err != nil {
+		h.handleError(err, ctx)
+		return
+	}
+
+	groupList, err := h.groupService.GetList(ctx_, request)
 	if err != nil {
 		err = h.errorWorker.ServeJSONError(ctx, err)
 		if err != nil {
@@ -295,6 +366,151 @@ func (h *handler) Expel(ctx *fasthttp.RequestCtx) {
 		return
 	}
 }
+
+func (h *handler) Resolve(ctx *fasthttp.RequestCtx) {
+	request, err := h.groupTransport.ResolveDecode(ctx)
+	if err != nil {
+		err = h.errorWorker.ServeJSONError(ctx, err)
+		if err != nil {
+			h.errorWorker.ServeFatalError(ctx)
+		}
+		return
+	}
+
+	ctx_ := context.Context{
+		RequestCtx: ctx,
+		Session:    &session.Session{},
+	}
+	err = ctx_.Session.Authorise(ctx, request)
+	if err != nil {
+		h.handleError(err, ctx)
+		return
+	}
+
+	response, err := h.groupService.ResolveGroup(ctx_, request)
+	if err != nil {
+		h.handleError(err, ctx)
+		return
+	}
+
+	err = httputils.EncodeDefault(response, ctx)
+	if err != nil {
+		h.handleError(err, ctx)
+		return
+	}
+}
+func (h *handler) AddLink(ctx *fasthttp.RequestCtx) {
+	request, err := h.groupTransport.AddLinkDecode(ctx)
+	if err != nil {
+		err = h.errorWorker.ServeJSONError(ctx, err)
+		if err != nil {
+			h.errorWorker.ServeFatalError(ctx)
+		}
+		return
+	}
+
+	ctx_ := context.Context{
+		RequestCtx: ctx,
+		Session:    &session.Session{},
+	}
+	err = ctx_.Session.Authorise(ctx, request)
+	if err != nil {
+		h.handleError(err, ctx)
+		return
+	}
+	err = h.groupService.CheckPermission(ctx_, models.Group{ID: request.Group}, models.ActionExpel)
+
+	if err != nil {
+		h.handleError(err, ctx)
+		return
+	}
+	response, err := h.groupService.AddGroupInviteLink(ctx_, request)
+	if err != nil {
+		h.handleError(err, ctx)
+		return
+	}
+
+	err = httputils.EncodeDefault(response, ctx)
+	if err != nil {
+		h.handleError(err, ctx)
+		return
+	}
+}
+func (h *handler) RemoveLink(ctx *fasthttp.RequestCtx) {
+	request, err := h.groupTransport.RemoveLinkDecode(ctx)
+	if err != nil {
+		err = h.errorWorker.ServeJSONError(ctx, err)
+		if err != nil {
+			h.errorWorker.ServeFatalError(ctx)
+		}
+		return
+	}
+
+	ctx_ := context.Context{
+		RequestCtx: ctx,
+		Session:    &session.Session{},
+	}
+	err = ctx_.Session.Authorise(ctx, request)
+	if err != nil {
+		h.handleError(err, ctx)
+		return
+	}
+	err = h.groupService.CheckPermission(ctx_, models.Group{ID: request.Group}, models.ActionExpel)
+
+	if err != nil {
+		h.handleError(err, ctx)
+		return
+	}
+	response, err := h.groupService.RemoveGroupInviteLink(ctx_, request)
+	if err != nil {
+		h.handleError(err, ctx)
+		return
+	}
+
+	err = httputils.EncodeDefault(response, ctx)
+	if err != nil {
+		h.handleError(err, ctx)
+		return
+	}
+}
+func (h *handler) ListLinks(ctx *fasthttp.RequestCtx) {
+	request, err := h.groupTransport.ListLinkDecode(ctx)
+	if err != nil {
+		err = h.errorWorker.ServeJSONError(ctx, err)
+		if err != nil {
+			h.errorWorker.ServeFatalError(ctx)
+		}
+		return
+	}
+
+	ctx_ := context.Context{
+		RequestCtx: ctx,
+		Session:    &session.Session{},
+	}
+	err = ctx_.Session.Authorise(ctx, request)
+	if err != nil {
+		h.handleError(err, ctx)
+		return
+	}
+	err = h.groupService.CheckPermission(ctx_, models.Group{ID: request.Group}, models.ActionExpel)
+
+	if err != nil {
+		h.handleError(err, ctx)
+		return
+	}
+	response, err := h.groupService.ListGroupInviteLink(ctx_, request)
+	if err != nil {
+		h.handleError(err, ctx)
+		return
+	}
+
+	err = httputils.EncodeDefault(response, ctx)
+	if err != nil {
+		h.handleError(err, ctx)
+		return
+	}
+}
+
 
 func (h *handler) handleError(err error, ctx *fasthttp.RequestCtx) {
 	err = h.errorWorker.ServeJSONError(ctx, err)

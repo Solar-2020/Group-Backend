@@ -10,6 +10,7 @@ import (
 const (
 	queryReturningID = "RETURNING id;"
 	userGroupsTable = "users_groups"
+	groupLinksTable = "group_links"
 	pgErrorUniqueConstraint = "23505"
 )
 
@@ -29,6 +30,10 @@ type Storage interface {
 	SelectGroupRole(groupID, userID int) (roleID int, err error)
 
 	SelectGroupsByUserID(userID int) (group []models.GroupPreview, err error)
+	HashToGroupID(line string) (groupID  int, err error)
+	RemoveLinkToGroup(groupID int, link string) (err error)
+	ListShortLinksToGroup(groupID int) (res []models.GroupInviteLink, err error)
+	AddShortLinkToGroup(groupID int, link string, author int) (err error)
 }
 
 type storage struct {
@@ -157,7 +162,8 @@ func (s *storage) SelectGroupsByUserID(userID int) (groups []models.GroupPreview
 		   g.url,
 		   g.avatar_url,
 		   r.id,
-		   r.title
+		   r.title,
+		   g.status_id
 	FROM groups AS g
 			 JOIN users_groups AS ug ON g.id = ug.group_id
 			 JOIN roles AS r ON ug.role_id = r.id
@@ -171,12 +177,82 @@ func (s *storage) SelectGroupsByUserID(userID int) (groups []models.GroupPreview
 	defer rows.Close()
 	for rows.Next() {
 		var tempGroup models.GroupPreview
-		err = rows.Scan(&tempGroup.ID, &tempGroup.Title, &tempGroup.Description, &tempGroup.URL, &tempGroup.AvatarURL, &tempGroup.UserRoleID, &tempGroup.UserRole)
+		err = rows.Scan(&tempGroup.ID, &tempGroup.Title, &tempGroup.Description, &tempGroup.URL,
+			&tempGroup.AvatarURL, &tempGroup.UserRoleID, &tempGroup.UserRole, &tempGroup.Status)
 		if err != nil {
 			return
 		}
 		tempGroup.UserID = userID
 		groups = append(groups, tempGroup)
+	}
+	return
+}
+
+func (s *storage) HashToGroupID(line string) (groupID  int, err error) {
+	const sqlTemplate = `SELECT group_id from %s WHERE link=$1`
+	query := fmt.Sprintf(sqlTemplate, groupLinksTable)
+
+	row := s.db.QueryRow(query, line)
+	if row == nil {
+		err = fmt.Errorf("nil row")
+		return
+	}
+	err = row.Scan(&groupID)
+	return
+}
+
+func (s *storage) AddShortLinkToGroup(groupID int, link string, author int) (err error) {
+	const sqlTemplate = `INSERT INTO %s (group_id, link, author) VALUES ($1, $2, $3)`
+	query := fmt.Sprintf(sqlTemplate, groupLinksTable)
+
+	res, err := s.db.Exec(query, groupID, link, author)
+	if err != nil {
+		return err
+	}
+	c, err := res.RowsAffected()
+	if err != nil {
+		return
+	}
+	if c < 1 {
+		err = fmt.Errorf("not added")
+	}
+	return
+}
+
+func (s *storage) ListShortLinksToGroup(groupID int) (res []models.GroupInviteLink, err error) {
+	const sqlTemplate = `SELECT link, created, author from %s WHERE group_id=$1`
+	query := fmt.Sprintf(sqlTemplate, groupLinksTable)
+
+	rows, err := s.db.Query(query, groupID)
+	if err != nil {
+		return
+	}
+
+	for rows.Next(){
+		link := models.GroupInviteLink{}
+		err = rows.Scan(&link.Link, &link.Added, &link.Author)
+		if err != nil {
+			return
+		}
+		res = append(res, link)
+	}
+	return
+}
+
+func (s *storage) RemoveLinkToGroup(groupID int, link string) (err error) {
+	const sqlTemplate = `DELETE FROM %s WHERE group_id=$1 AND link=$2`
+	query := fmt.Sprintf(sqlTemplate, groupLinksTable)
+
+	res, err := s.db.Exec(query, groupID, link)
+	if err != nil {
+		return
+	}
+	c, err := res.RowsAffected()
+	if err != nil {
+		return
+	}
+	if c < 1 {
+		err = fmt.Errorf("not removed")
 	}
 	return
 }

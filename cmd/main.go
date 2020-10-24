@@ -6,6 +6,7 @@ import (
 	"github.com/Solar-2020/GoUtils/http/errorWorker"
 	"github.com/Solar-2020/Group-Backend/cmd/handlers"
 	groupHandler "github.com/Solar-2020/Group-Backend/cmd/handlers/group"
+	"github.com/Solar-2020/Group-Backend/internal"
 	"github.com/Solar-2020/Group-Backend/internal/services/group"
 	"github.com/Solar-2020/Group-Backend/internal/storages/groupStorage"
 	"github.com/kelseyhightower/envconfig"
@@ -17,22 +18,16 @@ import (
 	"syscall"
 )
 
-type config struct {
-	Port                          string `envconfig:"PORT" default:"8099"`
-	GroupDataBaseConnectionString string `envconfig:"GROUP_DB_CONNECTION_STRING" default:"-"`
-}
-
 func main() {
 	log := zerolog.New(zerolog.ConsoleWriter{Out: os.Stdout})
 
-	var cfg config
-	err := envconfig.Process("", &cfg)
+	err := envconfig.Process("", &internal.Config)
 	if err != nil {
 		log.Fatal().Msg(err.Error())
 		return
 	}
 
-	groupDB, err := sql.Open("postgres", cfg.GroupDataBaseConnectionString)
+	groupDB, err := sql.Open("postgres", internal.Config.GroupDataBaseConnectionString)
 	if err != nil {
 		log.Fatal().Msg(err.Error())
 		return
@@ -56,8 +51,8 @@ func main() {
 	}
 
 	go func() {
-		log.Info().Str("msg", "start server").Str("port", cfg.Port).Send()
-		if err := server.ListenAndServe(":" + cfg.Port); err != nil {
+		log.Info().Str("msg", "start server").Str("port", internal.Config.Port).Send()
+		if err := server.ListenAndServe(":" + internal.Config.Port); err != nil {
 			log.Error().Str("msg", "server run failure").Err(err).Send()
 			os.Exit(1)
 		}
