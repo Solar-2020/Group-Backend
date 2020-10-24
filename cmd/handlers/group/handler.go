@@ -1,7 +1,6 @@
 package groupHandler
 
 import (
-	"fmt"
 	"github.com/Solar-2020/GoUtils/context"
 	httputils "github.com/Solar-2020/GoUtils/http"
 	"github.com/Solar-2020/GoUtils/session"
@@ -41,11 +40,7 @@ func NewHandler(groupService groupService, groupTransport groupTransport, errorW
 func (h *handler) Create(ctx *fasthttp.RequestCtx) {
 	req, err := h.groupTransport.CreateDecode(ctx)
 	if err != nil {
-		fmt.Println("Create: cannot decode request")
-		err = h.errorWorker.ServeJSONError(ctx, err)
-		if err != nil {
-			h.errorWorker.ServeFatalError(ctx)
-		}
+		h.handleError(err, ctx)
 		return
 	}
 
@@ -61,21 +56,13 @@ func (h *handler) Create(ctx *fasthttp.RequestCtx) {
 
 	groupReturn, err := h.groupService.Create(ctx_, req)
 	if err != nil {
-		fmt.Println("Create: bad usecase: ", err)
-		err = h.errorWorker.ServeJSONError(ctx, err)
-		if err != nil {
-			h.errorWorker.ServeFatalError(ctx)
-		}
+		h.handleError(err, ctx)
 		return
 	}
 
 	err = h.groupTransport.CreateEncode(groupReturn, ctx)
 	if err != nil {
-		fmt.Println("Create: cannot encode response: ", err)
-		err = h.errorWorker.ServeJSONError(ctx, err)
-		if err != nil {
-			h.errorWorker.ServeFatalError(ctx)
-		}
+		h.handleError(err, ctx)
 		return
 	}
 }
@@ -83,10 +70,7 @@ func (h *handler) Create(ctx *fasthttp.RequestCtx) {
 func (h *handler) Update(ctx *fasthttp.RequestCtx) {
 	req, err := h.groupTransport.UpdateDecode(ctx)
 	if err != nil {
-		err = h.errorWorker.ServeJSONError(ctx, err)
-		if err != nil {
-			h.errorWorker.ServeFatalError(ctx)
-		}
+		h.handleError(err, ctx)
 		return
 	}
 
@@ -108,19 +92,13 @@ func (h *handler) Update(ctx *fasthttp.RequestCtx) {
 
 	groupReturn, err := h.groupService.Update(ctx_, req)
 	if err != nil {
-		err = h.errorWorker.ServeJSONError(ctx, err)
-		if err != nil {
-			h.errorWorker.ServeFatalError(ctx)
-		}
+		h.handleError(err, ctx)
 		return
 	}
 
 	err = h.groupTransport.UpdateEncode(groupReturn, ctx)
 	if err != nil {
-		err = h.errorWorker.ServeJSONError(ctx, err)
-		if err != nil {
-			h.errorWorker.ServeFatalError(ctx)
-		}
+		h.handleError(err, ctx)
 		return
 	}
 }
@@ -128,10 +106,7 @@ func (h *handler) Update(ctx *fasthttp.RequestCtx) {
 func (h *handler) Delete(ctx *fasthttp.RequestCtx) {
 	req, err := h.groupTransport.DeleteDecode(ctx)
 	if err != nil {
-		err = h.errorWorker.ServeJSONError(ctx, err)
-		if err != nil {
-			h.errorWorker.ServeFatalError(ctx)
-		}
+		h.handleError(err, ctx)
 		return
 	}
 
@@ -153,19 +128,13 @@ func (h *handler) Delete(ctx *fasthttp.RequestCtx) {
 
 	group, err := h.groupService.Delete(ctx_, req)
 	if err != nil {
-		err = h.errorWorker.ServeJSONError(ctx, err)
-		if err != nil {
-			h.errorWorker.ServeFatalError(ctx)
-		}
+		h.handleError(err, ctx)
 		return
 	}
 
 	err = h.groupTransport.DeleteEncode(group, ctx)
 	if err != nil {
-		err = h.errorWorker.ServeJSONError(ctx, err)
-		if err != nil {
-			h.errorWorker.ServeFatalError(ctx)
-		}
+		h.handleError(err, ctx)
 		return
 	}
 }
@@ -173,10 +142,7 @@ func (h *handler) Delete(ctx *fasthttp.RequestCtx) {
 func (h *handler) Get(ctx *fasthttp.RequestCtx) {
 	request, err := h.groupTransport.GetDecode(ctx)
 	if err != nil {
-		err = h.errorWorker.ServeJSONError(ctx, err)
-		if err != nil {
-			h.errorWorker.ServeFatalError(ctx)
-		}
+		h.handleError(err, ctx)
 		return
 	}
 
@@ -198,19 +164,13 @@ func (h *handler) Get(ctx *fasthttp.RequestCtx) {
 
 	group, err := h.groupService.Get(ctx_, request)
 	if err != nil {
-		err = h.errorWorker.ServeJSONError(ctx, err)
-		if err != nil {
-			h.errorWorker.ServeFatalError(ctx)
-		}
+		h.handleError(err, ctx)
 		return
 	}
 
 	err = h.groupTransport.GetEncode(group, ctx)
 	if err != nil {
-		err = h.errorWorker.ServeJSONError(ctx, err)
-		if err != nil {
-			h.errorWorker.ServeFatalError(ctx)
-		}
+		h.handleError(err, ctx)
 		return
 	}
 }
@@ -218,10 +178,7 @@ func (h *handler) Get(ctx *fasthttp.RequestCtx) {
 func (h *handler) GetList(ctx *fasthttp.RequestCtx) {
 	request, err := h.groupTransport.GetListDecode(ctx)
 	if err != nil {
-		err = h.errorWorker.ServeJSONError(ctx, err)
-		if err != nil {
-			h.errorWorker.ServeFatalError(ctx)
-		}
+		h.handleError(err, ctx)
 		return
 	}
 
@@ -237,19 +194,13 @@ func (h *handler) GetList(ctx *fasthttp.RequestCtx) {
 
 	groupList, err := h.groupService.GetList(ctx_, request)
 	if err != nil {
-		err = h.errorWorker.ServeJSONError(ctx, err)
-		if err != nil {
-			h.errorWorker.ServeFatalError(ctx)
-		}
+		h.handleError(err, ctx)
 		return
 	}
 
 	err = h.groupTransport.GetListEncode(groupList, ctx)
 	if err != nil {
-		err = h.errorWorker.ServeJSONError(ctx, err)
-		if err != nil {
-			h.errorWorker.ServeFatalError(ctx)
-		}
+		h.handleError(err, ctx)
 		return
 	}
 }
@@ -257,10 +208,7 @@ func (h *handler) GetList(ctx *fasthttp.RequestCtx) {
 func (h *handler) Invite(ctx *fasthttp.RequestCtx) {
 	request, err := h.groupTransport.InviteDecode(ctx)
 	if err != nil {
-		err = h.errorWorker.ServeJSONError(ctx, err)
-		if err != nil {
-			h.errorWorker.ServeFatalError(ctx)
-		}
+		h.handleError(err, ctx)
 		return
 	}
 
@@ -296,12 +244,10 @@ func (h *handler) Invite(ctx *fasthttp.RequestCtx) {
 func (h *handler) EditRole(ctx *fasthttp.RequestCtx) {
 	request, err := h.groupTransport.ChangeRoleDecode(ctx)
 	if err != nil {
-		err = h.errorWorker.ServeJSONError(ctx, err)
-		if err != nil {
-			h.errorWorker.ServeFatalError(ctx)
-		}
+		h.handleError(err, ctx)
 		return
 	}
+
 	ctx_ := context.Context{
 		RequestCtx: ctx,
 		Session:    &session.Session{},
@@ -332,10 +278,7 @@ func (h *handler) EditRole(ctx *fasthttp.RequestCtx) {
 func (h *handler) Expel(ctx *fasthttp.RequestCtx) {
 	request, err := h.groupTransport.ExpelDecode(ctx)
 	if err != nil {
-		err = h.errorWorker.ServeJSONError(ctx, err)
-		if err != nil {
-			h.errorWorker.ServeFatalError(ctx)
-		}
+		h.handleError(err, ctx)
 		return
 	}
 
@@ -370,10 +313,7 @@ func (h *handler) Expel(ctx *fasthttp.RequestCtx) {
 func (h *handler) Resolve(ctx *fasthttp.RequestCtx) {
 	request, err := h.groupTransport.ResolveDecode(ctx)
 	if err != nil {
-		err = h.errorWorker.ServeJSONError(ctx, err)
-		if err != nil {
-			h.errorWorker.ServeFatalError(ctx)
-		}
+		h.handleError(err, ctx)
 		return
 	}
 
@@ -402,10 +342,7 @@ func (h *handler) Resolve(ctx *fasthttp.RequestCtx) {
 func (h *handler) AddLink(ctx *fasthttp.RequestCtx) {
 	request, err := h.groupTransport.AddLinkDecode(ctx)
 	if err != nil {
-		err = h.errorWorker.ServeJSONError(ctx, err)
-		if err != nil {
-			h.errorWorker.ServeFatalError(ctx)
-		}
+		h.handleError(err, ctx)
 		return
 	}
 
@@ -439,10 +376,7 @@ func (h *handler) AddLink(ctx *fasthttp.RequestCtx) {
 func (h *handler) RemoveLink(ctx *fasthttp.RequestCtx) {
 	request, err := h.groupTransport.RemoveLinkDecode(ctx)
 	if err != nil {
-		err = h.errorWorker.ServeJSONError(ctx, err)
-		if err != nil {
-			h.errorWorker.ServeFatalError(ctx)
-		}
+		h.handleError(err, ctx)
 		return
 	}
 
@@ -476,10 +410,7 @@ func (h *handler) RemoveLink(ctx *fasthttp.RequestCtx) {
 func (h *handler) ListLinks(ctx *fasthttp.RequestCtx) {
 	request, err := h.groupTransport.ListLinkDecode(ctx)
 	if err != nil {
-		err = h.errorWorker.ServeJSONError(ctx, err)
-		if err != nil {
-			h.errorWorker.ServeFatalError(ctx)
-		}
+		h.handleError(err, ctx)
 		return
 	}
 

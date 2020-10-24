@@ -18,6 +18,7 @@ type Service interface {
 	Delete(ctx context.Context, request models.DeleteRequest) (response models.DeleteResponse, err error)
 	Get(ctx context.Context, request models.GetRequest) (response models.GetResponse, err error)
 	GetList(ctx context.Context, request models.GetListRequest) (response models.GetListResponse, err error)
+
 	Invite(ctx context.Context, request models.InviteUserRequest) (response models.InviteUserResponse, err error)
 	ChangeRole(ctx context.Context, request models.ChangeRoleRequest) (response models.ChangeRoleResponse, err error)
 	ExpelUser(ctx  context.Context, request models.ExpelUserRequest) (response models.ExpelUserResponse, err error)
@@ -26,7 +27,6 @@ type Service interface {
 	AddGroupInviteLink(ctx context.Context, request models.AddInviteLinkRequest) (response models.AddInviteLinkResponse, err error)
 	RemoveGroupInviteLink(ctx context.Context, request models.RemoveInviteLinkRequest) (response models.RemoveInviteLinkRsponse, err error)
 	ListGroupInviteLink(ctx context.Context, request models.ListInviteLinkRequest) (response models.ListInviteLinkResponse, err error)
-
 
 	CheckPermission(ctx context.Context, group models.Group, action models.GroupAction) error
 }
