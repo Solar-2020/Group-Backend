@@ -148,8 +148,15 @@ func (s *service) GetList(userID int) (response []models.GroupPreview, err error
 
 func (s *service) Invite(ctx context.Context, request models.InviteUserRequest) (response models.InviteUserResponse, err error) {
 	// TODO: userEmail -> userID
-	userID := request.UserIdMock.UserID
-	err = s.groupStorage.InsertUser(request.Group, userID, int(request.Role))
+	for i := range request.User {
+		err_ := s.groupStorage.InsertUser(request.Group, request.UserID[i], int(request.Role))
+		if err_ != nil {
+			if err == nil {
+				err = fmt.Errorf("")
+			}
+			err = fmt.Errorf("%s\n%s", err, fmt.Sprintf("[%d]: %s", i, err_))
+		}
+	}
 	response = models.InviteUserResponse{
 		Group: request.Group, User: request.User, Role: request.Role,
 	}
@@ -158,7 +165,7 @@ func (s *service) Invite(ctx context.Context, request models.InviteUserRequest) 
 
 func (s *service) ChangeRole(ctx context.Context, request models.ChangeRoleRequest) (response models.ChangeRoleResponse, err error) {
 	// TODO: userEmail -> userID
-	userID := request.UserIdMock.UserID
+	userID := request.UserID
 	newRole, err := s.groupStorage.EditUserRole(request.Group, userID, int(request.Role))
 	response.Role = models.MemberRole(newRole)
 	return
@@ -166,7 +173,7 @@ func (s *service) ChangeRole(ctx context.Context, request models.ChangeRoleReque
 
 func (s *service) ExpelUser(ctx context.Context, request models.ExpelUserRequest) (response models.ExpelUserResponse, err error) {
 	// TODO: userEmail -> userID
-	userID := request.UserIdMock.UserID
+	userID := request.UserID
 	err = s.groupStorage.RemoveUser(int(request.Group), userID)
 	response.User = request.User
 	return

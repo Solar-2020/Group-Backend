@@ -46,20 +46,27 @@ type GroupPreview struct {
 }
 
 type UserIdMock struct {
-	UserID int 	`json:"userId"`
+	UserID []int 	`json:"userId"`
 }
+
 
 type InviteUserRequest struct {
 	httputils.Authorized
-	UserIdMock
+	UserID []int 	`json:"userId"`
 	Group int	`json:"group" validate:"required"`
-	User string		`json:"userEmail" validate:"required,email"`
+	User []string		`json:"userEmail" validate:"required"`
 	Role MemberRole	`json:"role"`
 }
 
 type InviteUserResponse InviteUserRequest
 
-type ChangeRoleRequest InviteUserRequest
+type ChangeRoleRequest struct {
+	httputils.Authorized
+	UserID int 	`json:"userId"`
+	Group int	`json:"group" validate:"required"`
+	User string		`json:"userEmail" validate:"required,email"`
+	Role MemberRole	`json:"role"`
+}
 
 type ChangeRoleResponse struct {
 	Role MemberRole	`json:"role"`
@@ -67,7 +74,7 @@ type ChangeRoleResponse struct {
 
 type ExpelUserRequest struct {
 	httputils.Authorized
-	UserIdMock
+	UserID int 	`json:"userId"`
 	Group int	`json:"group" validate:"required"`
 	User string		`json:"userEmail" validate:"required,email"`
 }
