@@ -2,7 +2,10 @@ package groupHandler
 
 import (
 	"fmt"
+	"github.com/Solar-2020/GoUtils/context"
 	httputils "github.com/Solar-2020/GoUtils/http"
+	"github.com/Solar-2020/GoUtils/session"
+	"github.com/Solar-2020/Group-Backend/internal/models"
 	"github.com/valyala/fasthttp"
 )
 
@@ -190,21 +193,31 @@ func (h *handler) Invite(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	response, err := h.groupService.Invite(request)
+	ctx_ := context.Context{
+		RequestCtx: ctx,
+		Session:    &session.Session{},
+	}
+	err = ctx_.Session.Authorise(ctx, request)
 	if err != nil {
-		err = h.errorWorker.ServeJSONError(ctx, err)
-		if err != nil {
-			h.errorWorker.ServeFatalError(ctx)
-		}
+		h.handleError(err, ctx)
+		return
+	}
+
+	err = h.groupService.CheckPermission(ctx_, models.Group{ID: request.Group}, models.ActionEditRole)
+	if err != nil {
+		h.handleError(err, ctx)
+		return
+	}
+
+	response, err := h.groupService.Invite(ctx_, request)
+	if err != nil {
+		h.handleError(err, ctx)
 		return
 	}
 
 	err = httputils.EncodeDefault(response, ctx)
 	if err != nil {
-		err = h.errorWorker.ServeJSONError(ctx, err)
-		if err != nil {
-			h.errorWorker.ServeFatalError(ctx)
-		}
+		h.handleError(err, ctx)
 		return
 	}
 }
@@ -218,23 +231,30 @@ func (h *handler) EditRole(ctx *fasthttp.RequestCtx) {
 		}
 		return
 	}
-
-	response, err := h.groupService.ChangeRole(request)
+	ctx_ := context.Context{
+		RequestCtx: ctx,
+		Session:    &session.Session{},
+	}
+	err = ctx_.Session.Authorise(ctx, request)
 	if err != nil {
-		err = h.errorWorker.ServeJSONError(ctx, err)
-		if err != nil {
-			h.errorWorker.ServeFatalError(ctx)
-		}
+		h.handleError(err, ctx)
+		return
+	}
+
+	err = h.groupService.CheckPermission(ctx_, models.Group{ID: request.Group}, models.ActionEditRole)
+	if err != nil {
+		h.handleError(err, ctx)
+		return
+	}
+	response, err := h.groupService.ChangeRole(ctx_, request)
+	if err != nil {
+		h.handleError(err, ctx)
 		return
 	}
 
 	err = httputils.EncodeDefault(response, ctx)
 	if err != nil {
-		err = h.errorWorker.ServeJSONError(ctx, err)
-		if err != nil {
-			h.errorWorker.ServeFatalError(ctx)
-		}
-		return
+		h.handleError(err, ctx)
 	}
 }
 
@@ -248,21 +268,38 @@ func (h *handler) Expel(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	response, err := h.groupService.ExpelUser(request)
+	ctx_ := context.Context{
+		RequestCtx: ctx,
+		Session:    &session.Session{},
+	}
+	err = ctx_.Session.Authorise(ctx, request)
 	if err != nil {
-		err = h.errorWorker.ServeJSONError(ctx, err)
-		if err != nil {
-			h.errorWorker.ServeFatalError(ctx)
-		}
+		h.handleError(err, ctx)
+		return
+	}
+	err = h.groupService.CheckPermission(ctx_, models.Group{ID: request.Group}, models.ActionExpel)
+
+	if err != nil {
+		h.handleError(err, ctx)
+		return
+	}
+	response, err := h.groupService.ExpelUser(ctx_, request)
+	if err != nil {
+		h.handleError(err, ctx)
 		return
 	}
 
 	err = httputils.EncodeDefault(response, ctx)
 	if err != nil {
-		err = h.errorWorker.ServeJSONError(ctx, err)
-		if err != nil {
-			h.errorWorker.ServeFatalError(ctx)
-		}
+		h.handleError(err, ctx)
 		return
 	}
+}
+
+func (h *handler) handleError(err error, ctx *fasthttp.RequestCtx) {
+	err = h.errorWorker.ServeJSONError(ctx, err)
+	if err != nil {
+		h.errorWorker.ServeFatalError(ctx)
+	}
+	return
 }

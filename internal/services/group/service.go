@@ -2,6 +2,8 @@ package group
 
 import (
 	"errors"
+	"fmt"
+	"github.com/Solar-2020/GoUtils/context"
 	"github.com/Solar-2020/Group-Backend/internal/models"
 )
 
@@ -11,9 +13,11 @@ type Service interface {
 	Delete(groupID, userID int) (response models.Group, err error)
 	Get(groupID, userID int) (response models.Group, err error)
 	GetList(userID int) (response []models.GroupPreview, err error)
-	Invite(request models.InviteUserRequest) (response models.InviteUserResponse, err error)
-	ChangeRole(request models.ChangeRoleRequest) (response models.ChangeRoleResponse, err error)
-	ExpelUser(request models.ExpelUserRequest) (response models.ExpelUserResponse, err error)
+	Invite(ctx context.Context, request models.InviteUserRequest) (response models.InviteUserResponse, err error)
+	ChangeRole(ctx context.Context, request models.ChangeRoleRequest) (response models.ChangeRoleResponse, err error)
+	ExpelUser(ctx  context.Context, request models.ExpelUserRequest) (response models.ExpelUserResponse, err error)
+
+	CheckPermission(ctx context.Context, group models.Group, action models.GroupAction) error
 }
 
 type service struct {
@@ -142,9 +146,9 @@ func (s *service) GetList(userID int) (response []models.GroupPreview, err error
 	return
 }
 
-func (s *service) Invite(request models.InviteUserRequest) (response models.InviteUserResponse, err error) {
+func (s *service) Invite(ctx context.Context, request models.InviteUserRequest) (response models.InviteUserResponse, err error) {
 	// TODO: userEmail -> userID
-	userID := 5
+	userID := request.UserIdMock.UserID
 	err = s.groupStorage.InsertUser(request.Group, userID, int(request.Role))
 	response = models.InviteUserResponse{
 		Group: request.Group, User: request.User, Role: request.Role,
@@ -152,18 +156,38 @@ func (s *service) Invite(request models.InviteUserRequest) (response models.Invi
 	return
 }
 
-func (s *service) ChangeRole(request models.ChangeRoleRequest) (response models.ChangeRoleResponse, err error) {
+func (s *service) ChangeRole(ctx context.Context, request models.ChangeRoleRequest) (response models.ChangeRoleResponse, err error) {
 	// TODO: userEmail -> userID
-	userID := 5
+	userID := request.UserIdMock.UserID
 	newRole, err := s.groupStorage.EditUserRole(request.Group, userID, int(request.Role))
 	response.Role = models.MemberRole(newRole)
 	return
 }
 
-func (s *service) ExpelUser(request models.ExpelUserRequest) (response models.ExpelUserResponse, err error) {
+func (s *service) ExpelUser(ctx context.Context, request models.ExpelUserRequest) (response models.ExpelUserResponse, err error) {
 	// TODO: userEmail -> userID
-	userID := 5
+	userID := request.UserIdMock.UserID
 	err = s.groupStorage.RemoveUser(int(request.Group), userID)
 	response.User = request.User
 	return
+}
+
+func (s *service) CheckPermission(ctx context.Context, groupRequest models.Group, action models.GroupAction) error {
+	denied := fmt.Errorf("denied")
+	if action == models.ActionCreate {
+		if groupRequest.CreateBy != 0 && ctx.UserID != groupRequest.CreateBy {
+			return denied
+		}
+	}
+	switch action {
+	case models.ActionGet:
+		return s.checkUserPermission(groupRequest.ID, ctx.UserID)
+	case models.ActionCreate:
+		if groupRequest.CreateBy != 0 && ctx.UserID != groupRequest.CreateBy {
+			return denied
+		}
+	case models.ActionEdit, models.ActionEditRole, models.ActionInvite, models.ActionExpel, models.ActionRemove:
+		return s.checkAdminPermission(groupRequest.ID, ctx.UserID)
+	}
+	return denied
 }

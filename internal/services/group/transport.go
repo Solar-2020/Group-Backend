@@ -29,6 +29,10 @@ type Transport interface {
 	ExpelDecode(ctx *fasthttp.RequestCtx) (request models.ExpelUserRequest, err error)
 }
 
+const (
+	DefaultUid = 1
+)
+
 type transport struct {
 	validator *validator.Validate
 }
@@ -169,6 +173,9 @@ func (t transport) InviteDecode(ctx *fasthttp.RequestCtx) (request models.Invite
 		return
 	}
 	err = t.validator.Struct(request)
+	if request.Uid == 0 {
+		request.Uid = DefaultUid
+	}
 	return
 }
 
@@ -178,6 +185,9 @@ func (t transport) ChangeRoleDecode(ctx *fasthttp.RequestCtx) (request models.Ch
 		return
 	}
 	err = t.validator.Struct(request)
+	if request.Uid == 0 {
+		request.Uid = DefaultUid
+	}
 	return
 }
 
@@ -187,5 +197,8 @@ func (t transport) ExpelDecode(ctx *fasthttp.RequestCtx) (request models.ExpelUs
 		return
 	}
 	err = t.validator.Struct(request)
+	if request.Uid == 0 {
+		request.Uid = DefaultUid
+	}
 	return
 }

@@ -1,6 +1,7 @@
 package groupHandler
 
 import (
+	"github.com/Solar-2020/GoUtils/context"
 	"github.com/Solar-2020/Group-Backend/internal/models"
 	"github.com/valyala/fasthttp"
 )
@@ -12,9 +13,11 @@ type groupService interface {
 	Get(groupID, userID int) (response models.Group, err error)
 	GetList(userID int) (response []models.GroupPreview, err error)
 
-	Invite(request models.InviteUserRequest) (response models.InviteUserResponse, err error)
-	ChangeRole(request models.ChangeRoleRequest) (response models.ChangeRoleResponse, err error)
-	ExpelUser(request models.ExpelUserRequest) (response models.ExpelUserResponse, err error)
+	Invite(ctx context.Context, request models.InviteUserRequest) (response models.InviteUserResponse, err error)
+	ChangeRole(ctx context.Context, request models.ChangeRoleRequest) (response models.ChangeRoleResponse, err error)
+	ExpelUser(ctx context.Context, request models.ExpelUserRequest) (response models.ExpelUserResponse, err error)
+
+	CheckPermission(ctx context.Context, group models.Group, action models.GroupAction) error
 }
 
 type groupTransport interface {

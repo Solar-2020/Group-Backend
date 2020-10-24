@@ -1,12 +1,26 @@
 package models
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 type MemberRole int
 const (
 	roleCreator MemberRole = 1
 	roleAdmin = 2
 	roleDweller = 3
+)
+
+type GroupAction int
+const (
+	ActionCreate GroupAction = iota
+	ActionEdit
+	ActionRemove
+	ActionGet
+	ActionInvite
+	ActionEditRole
+	ActionExpel
 )
 
 type Group struct {
@@ -31,7 +45,24 @@ type GroupPreview struct {
 	UserRole    string `json:"userRole"`
 }
 
+type Authorized struct {
+	Uid int `json:"uid"`
+}
+
+func (r Authorized) GetUid() (int, error) {
+	if r.Uid == 0 {
+		return 0, fmt.Errorf("No uid")
+	}
+	return r.Uid, nil
+}
+
+type UserIdMock struct {
+	UserID int 	`json:"userId"`
+}
+
 type InviteUserRequest struct {
+	Authorized
+	UserIdMock
 	Group int	`json:"group" validate:"required"`
 	User string		`json:"userEmail" validate:"required,email"`
 	Role MemberRole	`json:"role"`
@@ -46,6 +77,8 @@ type ChangeRoleResponse struct {
 }
 
 type ExpelUserRequest struct {
+	Authorized
+	UserIdMock
 	Group int	`json:"group" validate:"required"`
 	User string		`json:"userEmail" validate:"required,email"`
 }
