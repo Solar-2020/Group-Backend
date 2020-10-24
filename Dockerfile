@@ -34,8 +34,6 @@ RUN apk --no-cache add curl
 
 COPY --from=builder /dist/main /
 
-EXPOSE 8098
-
 ADD ./scripts/run.sh /run.sh
 
 ENV GIT_BRANCH="main"
