@@ -11,6 +11,10 @@ type groupService interface {
 	Delete(groupID, userID int) (response models.Group, err error)
 	Get(groupID, userID int) (response models.Group, err error)
 	GetList(userID int) (response []models.GroupPreview, err error)
+
+	Invite(request models.InviteUserRequest) (response models.InviteUserResponse, err error)
+	ChangeRole(request models.ChangeRoleRequest) (response models.ChangeRoleResponse, err error)
+	ExpelUser(request models.ExpelUserRequest) (response models.ExpelUserResponse, err error)
 }
 
 type groupTransport interface {
@@ -28,6 +32,10 @@ type groupTransport interface {
 
 	GetListDecode(ctx *fasthttp.RequestCtx) (userID int, err error)
 	GetListEncode(response []models.GroupPreview, ctx *fasthttp.RequestCtx) (err error)
+
+	InviteDecode(ctx *fasthttp.RequestCtx) (request models.InviteUserRequest, err error)
+	ChangeRoleDecode(ctx *fasthttp.RequestCtx) (request models.ChangeRoleRequest, err error)
+	ExpelDecode(ctx *fasthttp.RequestCtx) (request models.ExpelUserRequest, err error)
 }
 
 type errorWorker interface {

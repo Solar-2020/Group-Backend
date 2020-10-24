@@ -2,17 +2,23 @@ package groupStorage
 
 import (
 	"database/sql"
+	"fmt"
 	"github.com/Solar-2020/Group-Backend/internal/models"
+	"github.com/lib/pq"
 )
 
 const (
 	queryReturningID = "RETURNING id;"
+	userGroupsTable = "users_groups"
+	pgErrorUniqueConstraint = "23505"
 )
 
 type Storage interface {
 	InsertGroup(group models.Group) (groupReturn models.Group, err error)
 
 	InsertUser(groupID, userID, roleID int) (err error)
+	EditUserRole(groupID, userID, roleID int) (resultRole int, err error)
+	RemoveUser(groupID, userID int) (err error)
 
 	UpdateGroup(group models.Group) (groupReturn models.Group, err error)
 
@@ -103,9 +109,45 @@ func (s *storage) InsertUser(groupID, userID, roleID int) (err error) {
 	VALUES ($1, $2, $3);`
 
 	_, err = s.db.Exec(sqlQuery, groupID, userID, roleID)
+	if pgErr, ok := err.(*pq.Error); ok {
+		if pgErr.Code == pgErrorUniqueConstraint {
+			err = fmt.Errorf("exists")
+		}
+	}
 
 	return
 }
+
+func (s *storage) EditUserRole(groupID, userID, roleID int) (resultRole int, err error) {
+	const sqlQuery = `
+	UPDATE %s SET role_id=$1 WHERE group_id=$2 AND user_id=$3
+	RETURNING role_id`
+
+	row := s.db.QueryRow(
+		fmt.Sprintf(sqlQuery, userGroupsTable),
+		roleID, groupID, userID)
+	if row == nil {
+		err = fmt.Errorf("nil row")
+		return
+	}
+	err = row.Scan(&resultRole)
+	return
+}
+
+func (s *storage) RemoveUser(groupID, userID int) (err error) {
+	const sqlQuery = `
+	DELETE FROM %s WHERE group_id=$1 AND user_id=$2`
+	res, err := s.db.Exec(fmt.Sprintf(sqlQuery, userGroupsTable), groupID, userID)
+	if err != nil {
+		return
+	}
+
+	if c, err2 := res.RowsAffected(); err2 == nil && c < 1 {
+		err = fmt.Errorf("removed nothing")
+	}
+	return
+}
+
 
 func (s *storage) SelectGroupsByUserID(userID int) (groups []models.GroupPreview, err error) {
 	const sqlQuery = `

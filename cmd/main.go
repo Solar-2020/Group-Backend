@@ -2,9 +2,10 @@ package main
 
 import (
 	"database/sql"
+	httputils "github.com/Solar-2020/GoUtils/http"
+	"github.com/Solar-2020/GoUtils/http/errorWorker"
 	"github.com/Solar-2020/Group-Backend/cmd/handlers"
 	groupHandler "github.com/Solar-2020/Group-Backend/cmd/handlers/group"
-	"github.com/Solar-2020/Group-Backend/internal/errorWorker"
 	"github.com/Solar-2020/Group-Backend/internal/services/group"
 	"github.com/Solar-2020/Group-Backend/internal/storages/groupStorage"
 	"github.com/kelseyhightower/envconfig"
@@ -48,7 +49,7 @@ func main() {
 
 	groupHandler := groupHandler.NewHandler(groupService, groupTransport, errorWorker)
 
-	middlewares := handlers.NewMiddleware()
+	middlewares := httputils.NewMiddleware()
 
 	server := fasthttp.Server{
 		Handler: handlers.NewFastHttpRouter(groupHandler, middlewares).Handler,

@@ -17,8 +17,6 @@ RUN go mod download
 # Copy the code into the container
 COPY . /build
 
-RUN pwd && ls && ls /build
-
 # Build the application
 RUN go build -o main /build/cmd/
 
@@ -38,12 +36,6 @@ EXPOSE 8098
 ADD ./scripts/run.sh /run.sh
 
 ENV GIT_BRANCH="main"
+ENV SERVICE_NAME="default"
 
-#RUN touch /solar_main.log
-#RUN ls /
-
-# Command to run
-#CMD ["/main >> /solar_main.log"]
-#CMD "/bin/sh -c ls /"
-#CMD "/bin/sh"
-CMD /run.sh /main /var/log/solar_group_$GIT_BRANCH.log
+CMD /run.sh /main /var/log/solar_$SERVICE_NAME.$GIT_BRANCH.log

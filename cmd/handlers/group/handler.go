@@ -2,6 +2,7 @@ package groupHandler
 
 import (
 	"fmt"
+	httputils "github.com/Solar-2020/GoUtils/http"
 	"github.com/valyala/fasthttp"
 )
 
@@ -11,6 +12,9 @@ type Handler interface {
 	Delete(ctx *fasthttp.RequestCtx)
 	Get(ctx *fasthttp.RequestCtx)
 	GetList(ctx *fasthttp.RequestCtx)
+	Invite(ctx *fasthttp.RequestCtx)
+	EditRole(ctx *fasthttp.RequestCtx)
+	Expel(ctx *fasthttp.RequestCtx)
 }
 
 type handler struct {
@@ -167,6 +171,93 @@ func (h *handler) GetList(ctx *fasthttp.RequestCtx) {
 	}
 
 	err = h.groupTransport.GetListEncode(groupList, ctx)
+	if err != nil {
+		err = h.errorWorker.ServeJSONError(ctx, err)
+		if err != nil {
+			h.errorWorker.ServeFatalError(ctx)
+		}
+		return
+	}
+}
+
+func (h *handler) Invite(ctx *fasthttp.RequestCtx) {
+	request, err := h.groupTransport.InviteDecode(ctx)
+	if err != nil {
+		err = h.errorWorker.ServeJSONError(ctx, err)
+		if err != nil {
+			h.errorWorker.ServeFatalError(ctx)
+		}
+		return
+	}
+
+	response, err := h.groupService.Invite(request)
+	if err != nil {
+		err = h.errorWorker.ServeJSONError(ctx, err)
+		if err != nil {
+			h.errorWorker.ServeFatalError(ctx)
+		}
+		return
+	}
+
+	err = httputils.EncodeDefault(response, ctx)
+	if err != nil {
+		err = h.errorWorker.ServeJSONError(ctx, err)
+		if err != nil {
+			h.errorWorker.ServeFatalError(ctx)
+		}
+		return
+	}
+}
+
+func (h *handler) EditRole(ctx *fasthttp.RequestCtx) {
+	request, err := h.groupTransport.ChangeRoleDecode(ctx)
+	if err != nil {
+		err = h.errorWorker.ServeJSONError(ctx, err)
+		if err != nil {
+			h.errorWorker.ServeFatalError(ctx)
+		}
+		return
+	}
+
+	response, err := h.groupService.ChangeRole(request)
+	if err != nil {
+		err = h.errorWorker.ServeJSONError(ctx, err)
+		if err != nil {
+			h.errorWorker.ServeFatalError(ctx)
+		}
+		return
+	}
+
+	err = httputils.EncodeDefault(response, ctx)
+	if err != nil {
+		err = h.errorWorker.ServeJSONError(ctx, err)
+		if err != nil {
+			h.errorWorker.ServeFatalError(ctx)
+		}
+		return
+	}
+}
+
+func (h *handler) Expel(ctx *fasthttp.RequestCtx) {
+	request, err := h.groupTransport.ExpelDecode(ctx)
+	if err != nil {
+		err = h.errorWorker.ServeJSONError(ctx, err)
+		if err != nil {
+			h.errorWorker.ServeFatalError(ctx)
+		}
+		return
+	}
+
+	response, err := h.groupService.ExpelUser(request)
+	if err != nil {
+		err = h.errorWorker.ServeJSONError(ctx, err)
+		if err != nil {
+			h.errorWorker.ServeFatalError(ctx)
+		}
+		return
+	}
+
+	err = httputils.EncodeDefault(response, ctx)
 	if err != nil {
 		err = h.errorWorker.ServeJSONError(ctx, err)
 		if err != nil {

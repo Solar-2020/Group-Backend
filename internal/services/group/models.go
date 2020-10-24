@@ -8,6 +8,8 @@ type groupStorage interface {
 	InsertGroup(group models.Group) (groupReturn models.Group, err error)
 
 	InsertUser(groupID, userID, roleID int) (err error)
+	EditUserRole(groupID, userID, roleID int) (resultRole int, err error)
+	RemoveUser(groupID, userID int) (err error)
 
 	UpdateGroup(group models.Group) (groupReturn models.Group, err error)
 

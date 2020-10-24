@@ -11,6 +11,9 @@ type Service interface {
 	Delete(groupID, userID int) (response models.Group, err error)
 	Get(groupID, userID int) (response models.Group, err error)
 	GetList(userID int) (response []models.GroupPreview, err error)
+	Invite(request models.InviteUserRequest) (response models.InviteUserResponse, err error)
+	ChangeRole(request models.ChangeRoleRequest) (response models.ChangeRoleResponse, err error)
+	ExpelUser(request models.ExpelUserRequest) (response models.ExpelUserResponse, err error)
 }
 
 type service struct {
@@ -136,5 +139,31 @@ func (s *service) Get(groupID, userID int) (response models.Group, err error) {
 func (s *service) GetList(userID int) (response []models.GroupPreview, err error) {
 	response, err = s.groupStorage.SelectGroupsByUserID(userID)
 
+	return
+}
+
+func (s *service) Invite(request models.InviteUserRequest) (response models.InviteUserResponse, err error) {
+	// TODO: userEmail -> userID
+	userID := 5
+	err = s.groupStorage.InsertUser(request.Group, userID, int(request.Role))
+	response = models.InviteUserResponse{
+		Group: request.Group, User: request.User, Role: request.Role,
+	}
+	return
+}
+
+func (s *service) ChangeRole(request models.ChangeRoleRequest) (response models.ChangeRoleResponse, err error) {
+	// TODO: userEmail -> userID
+	userID := 5
+	newRole, err := s.groupStorage.EditUserRole(request.Group, userID, int(request.Role))
+	response.Role = models.MemberRole(newRole)
+	return
+}
+
+func (s *service) ExpelUser(request models.ExpelUserRequest) (response models.ExpelUserResponse, err error) {
+	// TODO: userEmail -> userID
+	userID := 5
+	err = s.groupStorage.RemoveUser(int(request.Group), userID)
+	response.User = request.User
 	return
 }

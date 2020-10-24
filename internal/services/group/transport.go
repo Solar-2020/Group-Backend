@@ -3,6 +3,7 @@ package group
 import (
 	"encoding/json"
 	"github.com/Solar-2020/Group-Backend/internal/models"
+	"github.com/go-playground/validator"
 	"github.com/valyala/fasthttp"
 	"strconv"
 )
@@ -22,13 +23,20 @@ type Transport interface {
 
 	GetListDecode(ctx *fasthttp.RequestCtx) (userID int, err error)
 	GetListEncode(response []models.GroupPreview, ctx *fasthttp.RequestCtx) (err error)
+
+	InviteDecode(ctx *fasthttp.RequestCtx) (request models.InviteUserRequest, err error)
+	ChangeRoleDecode(ctx *fasthttp.RequestCtx) (request models.ChangeRoleRequest, err error)
+	ExpelDecode(ctx *fasthttp.RequestCtx) (request models.ExpelUserRequest, err error)
 }
 
 type transport struct {
+	validator *validator.Validate
 }
 
 func NewTransport() Transport {
-	return &transport{}
+	return &transport{
+		validator: validator.New(),
+	}
 }
 
 func (t transport) CreateDecode(ctx *fasthttp.RequestCtx) (request models.Group, err error) {
@@ -36,6 +44,10 @@ func (t transport) CreateDecode(ctx *fasthttp.RequestCtx) (request models.Group,
 	userID := 1
 	var group models.Group
 	err = json.Unmarshal(ctx.Request.Body(), &group)
+	if err != nil {
+		return
+	}
+	err = t.validator.Struct(request)
 	if err != nil {
 		return
 	}
@@ -64,13 +76,16 @@ func (t transport) UpdateDecode(ctx *fasthttp.RequestCtx) (request models.Group,
 	if err != nil {
 		return
 	}
+	err = t.validator.Struct(request)
+	if err != nil {
+		return
+	}
 
 	groupIDStr := ctx.UserValue("groupID").(string)
 	group.ID, err = strconv.Atoi(groupIDStr)
 	if err != nil {
 		return
 	}
-
 	request = group
 	return request, userID, err
 }
@@ -145,5 +160,32 @@ func (t transport) GetListEncode(response []models.GroupPreview, ctx *fasthttp.R
 	ctx.Response.Header.SetContentType("application/json")
 	ctx.Response.Header.SetStatusCode(fasthttp.StatusOK)
 	ctx.SetBody(body)
+	return
+}
+
+func (t transport) InviteDecode(ctx *fasthttp.RequestCtx) (request models.InviteUserRequest, err error) {
+	err = json.Unmarshal(ctx.Request.Body(), &request)
+	if err != nil {
+		return
+	}
+	err = t.validator.Struct(request)
+	return
+}
+
+func (t transport) ChangeRoleDecode(ctx *fasthttp.RequestCtx) (request models.ChangeRoleRequest, err error) {
+	err = json.Unmarshal(ctx.Request.Body(), &request)
+	if err != nil {
+		return
+	}
+	err = t.validator.Struct(request)
+	return
+}
+
+func (t transport) ExpelDecode(ctx *fasthttp.RequestCtx) (request models.ExpelUserRequest, err error) {
+	err = json.Unmarshal(ctx.Request.Body(), &request)
+	if err != nil {
+		return
+	}
+	err = t.validator.Struct(request)
 	return
 }
