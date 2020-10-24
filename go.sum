@@ -1,7 +1,5 @@
-github.com/Solar-2020/GoUtils v0.0.0-20201024095230-8f259c1d6837 h1:uWBKefwFhuEuL+BXb+cvCrQejp4P5iaxoSu+Qj9fss0=
-github.com/Solar-2020/GoUtils v0.0.0-20201024095230-8f259c1d6837/go.mod h1:S+8e42EZ+g2yD2fcSDn1eag4IEhAXryx5pjxgt7OxNU=
-github.com/Solar-2020/GoUtils v0.0.0-20201024134421-35a28d161e81 h1:iiHr0j6JJCalrG6QFD33qazdpIlyLULGE0Za151DMXA=
-github.com/Solar-2020/GoUtils v0.0.0-20201024134421-35a28d161e81/go.mod h1:S+8e42EZ+g2yD2fcSDn1eag4IEhAXryx5pjxgt7OxNU=
+github.com/Solar-2020/GoUtils v0.0.0-20201024140451-291e442dbad2 h1:tVdAb0/8nx5YPENRbNZMPx6DQif7UdQGH1LV2HYGZOY=
+github.com/Solar-2020/GoUtils v0.0.0-20201024140451-291e442dbad2/go.mod h1:S+8e42EZ+g2yD2fcSDn1eag4IEhAXryx5pjxgt7OxNU=
 github.com/andybalholm/brotli v1.0.0 h1:7UCwP93aiSfvWpapti8g88vVVGp2qqtGyePsSuDafo4=
 github.com/andybalholm/brotli v1.0.0/go.mod h1:loMXtMfwqflxFJPmdbJO0a3KNoPuLBgiu3qAvBg8x/Y=
 github.com/buaazp/fasthttprouter v0.1.1 h1:4oAnN0C3xZjylvZJdP35cxfclyn4TYkW6Y+DSvS+h8Q=

@@ -1,7 +1,7 @@
 package models
 
 import (
-	"fmt"
+	httputils "github.com/Solar-2020/GoUtils/http"
 	"time"
 )
 
@@ -45,23 +45,12 @@ type GroupPreview struct {
 	UserRole    string `json:"userRole"`
 }
 
-type Authorized struct {
-	Uid int `json:"uid"`
-}
-
-func (r Authorized) GetUid() (int, error) {
-	if r.Uid == 0 {
-		return 0, fmt.Errorf("No uid")
-	}
-	return r.Uid, nil
-}
-
 type UserIdMock struct {
 	UserID int 	`json:"userId"`
 }
 
 type InviteUserRequest struct {
-	Authorized
+	httputils.Authorized
 	UserIdMock
 	Group int	`json:"group" validate:"required"`
 	User string		`json:"userEmail" validate:"required,email"`
@@ -77,7 +66,7 @@ type ChangeRoleResponse struct {
 }
 
 type ExpelUserRequest struct {
-	Authorized
+	httputils.Authorized
 	UserIdMock
 	Group int	`json:"group" validate:"required"`
 	User string		`json:"userEmail" validate:"required,email"`
