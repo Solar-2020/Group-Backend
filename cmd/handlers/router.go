@@ -12,8 +12,8 @@ func NewFastHttpRouter(group groupHandler.Handler, middleware httputils.Middlewa
 	//router.Handle("GET", "/health", check)
 
 	router.PanicHandler = httputils.PanicHandler
-
 	middlewareChain := httputils.NewLogCorsChain(middleware)
+	router.Handle("GET", "/health", middleware.Log(httputils.HealthCheckHandler))
 
 	router.Handle("POST", "/group/group", middlewareChain(group.Create))
 	router.Handle("DELETE", "/group/group/:groupID", middlewareChain(group.Delete))
