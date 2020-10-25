@@ -2,6 +2,7 @@ package group
 
 import (
 	"encoding/json"
+	"github.com/Solar-2020/GoUtils/http"
 	"github.com/Solar-2020/Group-Backend/internal/models"
 	"github.com/go-playground/validator"
 	"github.com/valyala/fasthttp"
@@ -9,20 +10,20 @@ import (
 )
 
 type Transport interface {
-	CreateDecode(ctx *fasthttp.RequestCtx) (request models.CreateRequest, err error)
-	CreateEncode(response models.CreateResponse, ctx *fasthttp.RequestCtx) (err error)
+	CreateDecode(ctx *fasthttp.RequestCtx) (request models.Group, err error)
+	CreateEncode(response models.Group, ctx *fasthttp.RequestCtx) (err error)
 
-	UpdateDecode(ctx *fasthttp.RequestCtx) (request models.UpdateRequest, err error)
-	UpdateEncode(response models.UpdateResponse, ctx *fasthttp.RequestCtx) (err error)
+	UpdateDecode(ctx *fasthttp.RequestCtx) (request models.Group, userID int, err error)
+	UpdateEncode(response models.Group, ctx *fasthttp.RequestCtx) (err error)
 
-	DeleteDecode(ctx *fasthttp.RequestCtx) (request models.DeleteRequest, err error)
-	DeleteEncode(response models.DeleteResponse, ctx *fasthttp.RequestCtx) (err error)
+	DeleteDecode(ctx *fasthttp.RequestCtx) (groupID, userID int, err error)
+	DeleteEncode(response models.Group, ctx *fasthttp.RequestCtx) (err error)
 
-	GetDecode(ctx *fasthttp.RequestCtx) (request models.GetRequest, err error)
-	GetEncode(response models.GetResponse, ctx *fasthttp.RequestCtx) (err error)
+	GetDecode(ctx *fasthttp.RequestCtx) (groupID, userID int, err error)
+	GetEncode(response models.Group, ctx *fasthttp.RequestCtx) (err error)
 
-	GetListDecode(ctx *fasthttp.RequestCtx) (request models.GetListRequest, err error)
-	GetListEncode(response models.GetListResponse, ctx *fasthttp.RequestCtx) (err error)
+	GetListDecode(ctx *fasthttp.RequestCtx) (userID int, err error)
+	GetListEncode(response []models.GroupPreview, ctx *fasthttp.RequestCtx) (err error)
 
 	InviteDecode(ctx *fasthttp.RequestCtx) (request models.InviteUserRequest, err error)
 	ChangeRoleDecode(ctx *fasthttp.RequestCtx) (request models.ChangeRoleRequest, err error)
@@ -34,10 +35,6 @@ type Transport interface {
 	ListLinkDecode(ctx *fasthttp.RequestCtx) (request models.ListInviteLinkRequest, err error)
 }
 
-const (
-	DefaultUid = 1
-)
-
 type transport struct {
 	validator *validator.Validate
 }
@@ -48,26 +45,24 @@ func NewTransport() Transport {
 	}
 }
 
-func (t transport) CreateDecode(ctx *fasthttp.RequestCtx) (request models.CreateRequest, err error) {
+func (t transport) CreateDecode(ctx *fasthttp.RequestCtx) (request models.Group, err error) {
 	//userID := ctx.Value("UserID").(int)
-	//userID := 1
-	err = json.Unmarshal(ctx.Request.Body(), &request)
+	userID := 1
+	var group models.Group
+	err = json.Unmarshal(ctx.Request.Body(), &group)
 	if err != nil {
 		return
 	}
-	err = t.validator.Struct(request)
+	err = t.validator.Struct(group)
 	if err != nil {
 		return
 	}
-	tmp := ctx.Value("UserID")
-	if tmp != nil && request.CreateBy != 0{
-		request.CreateBy = tmp.(int)
-	}
-	//request.CreateBy = userID
+	group.CreateBy = userID
+	request = group
 	return
 }
 
-func (t transport) CreateEncode(response models.CreateResponse, ctx *fasthttp.RequestCtx) (err error) {
+func (t transport) CreateEncode(response models.Group, ctx *fasthttp.RequestCtx) (err error) {
 	body, err := json.Marshal(response)
 	if err != nil {
 		return
@@ -78,32 +73,30 @@ func (t transport) CreateEncode(response models.CreateResponse, ctx *fasthttp.Re
 	return
 }
 
-func (t transport) UpdateDecode(ctx *fasthttp.RequestCtx) (request models.UpdateRequest, err error) {
-	//userID = 1
+func (t transport) UpdateDecode(ctx *fasthttp.RequestCtx) (request models.Group, userID int, err error) {
+	//userID := ctx.Value("UserID").(int)
+	userID = 1
 
-	err = json.Unmarshal(ctx.Request.Body(), &request)
+	var group models.Group
+	err = json.Unmarshal(ctx.Request.Body(), &group)
 	if err != nil {
 		return
 	}
-	err = t.validator.Struct(request)
+	err = t.validator.Struct(group)
 	if err != nil {
 		return
-	}
-
-	tmp := ctx.Value("UserID")
-	if tmp != nil && request.UserID != 0{
-		request.UserID = tmp.(int)
 	}
 
 	groupIDStr := ctx.UserValue("groupID").(string)
-	request.ID, err = strconv.Atoi(groupIDStr)
+	group.ID, err = strconv.Atoi(groupIDStr)
 	if err != nil {
 		return
 	}
-	return request, err
+	request = group
+	return request, userID, err
 }
 
-func (t transport) UpdateEncode(response models.UpdateResponse, ctx *fasthttp.RequestCtx) (err error) {
+func (t transport) UpdateEncode(response models.Group, ctx *fasthttp.RequestCtx) (err error) {
 	body, err := json.Marshal(response)
 	if err != nil {
 		return
@@ -114,19 +107,19 @@ func (t transport) UpdateEncode(response models.UpdateResponse, ctx *fasthttp.Re
 	return
 }
 
-func (t transport) DeleteDecode(ctx *fasthttp.RequestCtx) (request models.DeleteRequest, err error) {
+func (t transport) DeleteDecode(ctx *fasthttp.RequestCtx) (groupID, userID int, err error) {
 	//userID := ctx.Value("UserID").(int)
-	//userID = 1
-	tmp := ctx.Value("UserID")
-	if tmp != nil {
-		request.UserID = tmp.(int)
-	}
+	userID = 1
 	groupIDStr := ctx.UserValue("groupID").(string)
-	request.GroupID, err = strconv.Atoi(groupIDStr)
+	groupID, err = strconv.Atoi(groupIDStr)
+	if err != nil {
+		return
+	}
+
 	return
 }
 
-func (t transport) DeleteEncode(response models.DeleteResponse, ctx *fasthttp.RequestCtx) (err error) {
+func (t transport) DeleteEncode(response models.Group, ctx *fasthttp.RequestCtx) (err error) {
 	body, err := json.Marshal(response)
 	if err != nil {
 		return
@@ -137,22 +130,18 @@ func (t transport) DeleteEncode(response models.DeleteResponse, ctx *fasthttp.Re
 	return
 }
 
-func (t transport) GetDecode(ctx *fasthttp.RequestCtx) (request models.GetRequest, err error) {
+func (t transport) GetDecode(ctx *fasthttp.RequestCtx) (groupID, userID int, err error) {
 	//userID := ctx.Value("UserID").(int)
-	//userID = 1
-	tmp := ctx.Value("UserID")
-	if tmp != nil {
-		request.UserID = tmp.(int)
-	}
+	userID = 1
 	groupIDStr := ctx.UserValue("groupID").(string)
-	request.GroupID, err = strconv.Atoi(groupIDStr)
+	groupID, err = strconv.Atoi(groupIDStr)
 	if err != nil {
 		return
 	}
 	return
 }
 
-func (t transport) GetEncode(response models.GetResponse, ctx *fasthttp.RequestCtx) (err error) {
+func (t transport) GetEncode(response models.Group, ctx *fasthttp.RequestCtx) (err error) {
 	body, err := json.Marshal(response)
 	if err != nil {
 		return
@@ -163,17 +152,13 @@ func (t transport) GetEncode(response models.GetResponse, ctx *fasthttp.RequestC
 	return
 }
 
-func (t transport) GetListDecode(ctx *fasthttp.RequestCtx) (request models.GetListRequest, err error) {
+func (t transport) GetListDecode(ctx *fasthttp.RequestCtx) (userID int, err error) {
 	//userID := ctx.Value("UserID").(int)
-	//userID = 1
-	tmp := ctx.Value("UserID")
-	if tmp != nil {
-		request.UserID = tmp.(int)
-	}
+	userID = 1
 	return
 }
 
-func (t transport) GetListEncode(response models.GetListResponse, ctx *fasthttp.RequestCtx) (err error) {
+func (t transport) GetListEncode(response []models.GroupPreview, ctx *fasthttp.RequestCtx) (err error) {
 	body, err := json.Marshal(response)
 	if err != nil {
 		return
@@ -189,10 +174,12 @@ func (t transport) InviteDecode(ctx *fasthttp.RequestCtx) (request models.Invite
 	if err != nil {
 		return
 	}
-	err = t.validator.Struct(request)
-	if request.Uid == 0 {
-		request.Uid = DefaultUid
+	if request.Group == 0 {
+		if urlId, err := http.GetUrlParamInt(ctx, "groupID"); err == nil {
+			request.Group = urlId
+		}
 	}
+	err = t.validator.Struct(request)
 	return
 }
 
@@ -202,9 +189,6 @@ func (t transport) ChangeRoleDecode(ctx *fasthttp.RequestCtx) (request models.Ch
 		return
 	}
 	err = t.validator.Struct(request)
-	if request.Uid == 0 {
-		request.Uid = DefaultUid
-	}
 	return
 }
 
@@ -214,9 +198,6 @@ func (t transport) ExpelDecode(ctx *fasthttp.RequestCtx) (request models.ExpelUs
 		return
 	}
 	err = t.validator.Struct(request)
-	if request.Uid == 0 {
-		request.Uid = DefaultUid
-	}
 	return
 }
 
@@ -230,9 +211,17 @@ func (t transport) ResolveDecode(ctx *fasthttp.RequestCtx) (request models.Resol
 }
 
 func (t transport) AddLinkDecode(ctx *fasthttp.RequestCtx) (request models.AddInviteLinkRequest, err error) {
-	err = json.Unmarshal(ctx.Request.Body(), &request)
-	if err != nil {
-		return
+	body := ctx.Request.Body()
+	if body != nil && len(body) > 0{
+		err = json.Unmarshal(ctx.Request.Body(), &request)
+		if err != nil {
+			return
+		}
+	}
+	if request.Group == 0 {
+		if urlId, err := http.GetUrlParamInt(ctx, "groupID"); err == nil {
+			request.Group = urlId
+		}
 	}
 	err = t.validator.Struct(request)
 	return

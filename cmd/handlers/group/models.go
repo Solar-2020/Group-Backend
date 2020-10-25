@@ -7,11 +7,11 @@ import (
 )
 
 type groupService interface {
-	Create(ctx context.Context, request models.CreateRequest) (response models.CreateResponse, err error)
-	Update(ctx context.Context, request models.UpdateRequest) (response models.UpdateResponse, err error)
-	Delete(ctx context.Context, request models.DeleteRequest) (response models.DeleteResponse, err error)
-	Get(ctx context.Context, request models.GetRequest) (response models.GetResponse, err error)
-	GetList(ctx context.Context, request models.GetListRequest) (response models.GetListResponse, err error)
+	Create(ctx context.Context, request models.Group) (response models.Group, err error)
+	Update(ctx context.Context, request models.Group) (response models.Group, err error)
+	Delete(ctx context.Context, groupID int) (response models.Group, err error)
+	Get(ctx context.Context, groupID int) (response models.Group, err error)
+	GetList(ctx context.Context) (response []models.GroupPreview, err error)
 
 	Invite(ctx context.Context, request models.InviteUserRequest) (response models.InviteUserResponse, err error)
 	ChangeRole(ctx context.Context, request models.ChangeRoleRequest) (response models.ChangeRoleResponse, err error)
@@ -27,20 +27,20 @@ type groupService interface {
 }
 
 type groupTransport interface {
-	CreateDecode(ctx *fasthttp.RequestCtx) (request models.CreateRequest, err error)
-	CreateEncode(response models.CreateResponse, ctx *fasthttp.RequestCtx) (err error)
+	CreateDecode(ctx *fasthttp.RequestCtx) (request models.Group, err error)
+	CreateEncode(response models.Group, ctx *fasthttp.RequestCtx) (err error)
 
-	UpdateDecode(ctx *fasthttp.RequestCtx) (request models.UpdateRequest, err error)
-	UpdateEncode(response models.UpdateResponse, ctx *fasthttp.RequestCtx) (err error)
+	UpdateDecode(ctx *fasthttp.RequestCtx) (request models.Group, userID int, err error)
+	UpdateEncode(response models.Group, ctx *fasthttp.RequestCtx) (err error)
 
-	DeleteDecode(ctx *fasthttp.RequestCtx) (request models.DeleteRequest, err error)
-	DeleteEncode(response models.DeleteResponse, ctx *fasthttp.RequestCtx) (err error)
+	DeleteDecode(ctx *fasthttp.RequestCtx) (groupID, userID int, err error)
+	DeleteEncode(response models.Group, ctx *fasthttp.RequestCtx) (err error)
 
-	GetDecode(ctx *fasthttp.RequestCtx) (request models.GetRequest, err error)
-	GetEncode(response models.GetResponse, ctx *fasthttp.RequestCtx) (err error)
+	GetDecode(ctx *fasthttp.RequestCtx) (groupID, userID int, err error)
+	GetEncode(response models.Group, ctx *fasthttp.RequestCtx) (err error)
 
-	GetListDecode(ctx *fasthttp.RequestCtx) (request models.GetListRequest, err error)
-	GetListEncode(response models.GetListResponse, ctx *fasthttp.RequestCtx) (err error)
+	GetListDecode(ctx *fasthttp.RequestCtx) (userID int, err error)
+	GetListEncode(response []models.GroupPreview, ctx *fasthttp.RequestCtx) (err error)
 
 	InviteDecode(ctx *fasthttp.RequestCtx) (request models.InviteUserRequest, err error)
 	ChangeRoleDecode(ctx *fasthttp.RequestCtx) (request models.ChangeRoleRequest, err error)

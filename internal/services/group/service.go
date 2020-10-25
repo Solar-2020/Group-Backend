@@ -13,11 +13,11 @@ import (
 )
 
 type Service interface {
-	Create(ctx context.Context, request models.CreateRequest) (response models.CreateResponse, err error)
-	Update(ctx context.Context, request models.UpdateRequest) (response models.UpdateResponse, err error)
-	Delete(ctx context.Context, request models.DeleteRequest) (response models.DeleteResponse, err error)
-	Get(ctx context.Context, request models.GetRequest) (response models.GetResponse, err error)
-	GetList(ctx context.Context, request models.GetListRequest) (response models.GetListResponse, err error)
+	Create(ctx context.Context, request models.Group) (response models.Group, err error)
+	Update(ctx context.Context, group models.Group) (response models.Group, err error)
+	Delete(ctx context.Context, groupID int) (response models.Group, err error)
+	Get(ctx context.Context, groupID int) (response models.Group, err error)
+	GetList(ctx context.Context) (response []models.GroupPreview, err error)
 
 	Invite(ctx context.Context, request models.InviteUserRequest) (response models.InviteUserResponse, err error)
 	ChangeRole(ctx context.Context, request models.ChangeRoleRequest) (response models.ChangeRoleResponse, err error)
@@ -45,21 +45,19 @@ func NewService(groupStorage groupStorage) Service {
 	}
 }
 
-func (s *service) Create(ctx context.Context, request models.CreateRequest) (response models.CreateResponse, err error) {
-	if request.CreateBy == 0 {
-		request.CreateBy = ctx.UserID
-	}
-	err = s.validateGroup(request.Group)
+func (s *service) Create(ctx context.Context, request models.Group) (response models.Group, err error) {
+	request.CreateBy = ctx.Session.Uid
+	err = s.validateGroup(request)
 	if err != nil {
 		return
 	}
 
-	err = s.checkUnique(request.Group)
+	err = s.checkUnique(request)
 	if err != nil {
 		return
 	}
 
-	response.Group, err = s.groupStorage.InsertGroup(request.Group)
+	response, err = s.groupStorage.InsertGroup(request)
 	if err != nil {
 		return
 	}
@@ -115,80 +113,72 @@ func (s *service) checkUserPermission(groupID, userID int) (err error) {
 	return
 }
 
-func (s *service) Update(ctx context.Context, request models.UpdateRequest) (response models.UpdateResponse, err error) {
-	if request.UserID == 0 {
-		request.UserID = ctx.UserID
-	}
-	err = s.checkAdminPermission(request.Group.ID, request.UserID)
+func (s *service) Update(ctx context.Context, group models.Group) (response models.Group, err error) {
+	err = s.checkAdminPermission(group.ID, ctx.Session.Uid)
 	if err != nil {
 		return
 	}
 
-	err = s.validateGroup(request.Group)
+	err = s.validateGroup(group)
 	if err != nil {
 		return
 	}
 
-	err = s.checkUnique(request.Group)
+	err = s.checkUnique(group)
 	if err != nil {
 		return
 	}
 
-	response.Group, err = s.groupStorage.UpdateGroup(request.Group)
+	response, err = s.groupStorage.UpdateGroup(group)
 
 	return
 }
 
-func (s *service) Delete(ctx context.Context, request models.DeleteRequest) (response models.DeleteResponse, err error) {
-	if request.UserID == 0 {
-		request.UserID = ctx.UserID
-	}
-	err = s.checkAdminPermission(request.GroupID, request.UserID)
+func (s *service) Delete(ctx context.Context, groupID int) (response models.Group, err error) {
+	err = s.checkAdminPermission(groupID, ctx.Session.Uid)
 	if err != nil {
 		return
 	}
 
-	response.Group, err = s.groupStorage.UpdateGroupStatus(request.GroupID, 2)
+	response, err = s.groupStorage.UpdateGroupStatus(groupID, 2)
 
 	return
 }
 
-func (s *service) Get(ctx context.Context, request models.GetRequest) (response models.GetResponse, err error) {
-	if request.UserID == 0 {
-		request.UserID = ctx.UserID
-	}
-	err = s.checkUserPermission(request.GroupID, request.UserID)
+func (s *service) Get(ctx context.Context, groupID int) (response models.Group, err error) {
+	err = s.checkUserPermission(groupID, ctx.Session.Uid)
 	if err != nil {
 		return
 	}
 
-	response.Group, err = s.groupStorage.SelectGroupByID(request.GroupID)
+	response, err = s.groupStorage.SelectGroupByID(groupID)
 
 	return
 }
 
-func (s *service) GetList(ctx context.Context, request models.GetListRequest) (response models.GetListResponse, err error) {
-	if request.UserID == 0 {
-		request.UserID = ctx.UserID
-	}
-	response.Groups, err = s.groupStorage.SelectGroupsByUserID(request.UserID)
-	response.UserID = request.UserID
+func (s *service) GetList(ctx context.Context) (response []models.GroupPreview, err error) {
+	response, err = s.groupStorage.SelectGroupsByUserID(ctx.Session.Uid)
 	return
 }
 
 func (s *service) Invite(ctx context.Context, request models.InviteUserRequest) (response models.InviteUserResponse, err error) {
 	// TODO: userEmail -> userID
-	for i := range request.User {
-		err_ := s.groupStorage.InsertUser(request.Group, request.UserID[i], int(request.Role))
+	addedUsers := make([]string, 0, len(request.UserID))
+	addedUsersID := make([]int, 0, len(request.UserID))
+	for i, userId := range request.UserID {
+		err_ := s.groupStorage.InsertUser(request.Group, userId, int(request.Role))
 		if err_ != nil {
 			if err == nil {
 				err = fmt.Errorf("")
 			}
 			err = fmt.Errorf("%s; %s", err, fmt.Sprintf("[%d]: %s", i, err_))
+		} else {
+			addedUsers = append(addedUsers, request.User[i])
+			addedUsersID = append(addedUsersID, userId)
 		}
 	}
 	response = models.InviteUserResponse{
-		Group: request.Group, User: request.User, Role: request.Role,
+		Group: request.Group, User: addedUsers, Role: request.Role, UserID: addedUsersID,
 	}
 	return
 }
@@ -213,19 +203,19 @@ func (s *service) ExpelUser(ctx context.Context, request models.ExpelUserRequest
 func (s *service) CheckPermission(ctx context.Context, groupRequest models.Group, action models.GroupAction) error {
 	denied := fmt.Errorf("denied")
 	if action == models.ActionCreate {
-		if groupRequest.CreateBy != 0 && ctx.UserID != groupRequest.CreateBy {
+		if groupRequest.CreateBy != 0 && ctx.Uid != groupRequest.CreateBy {
 			return denied
 		}
 	}
 	switch action {
-	case models.ActionGet:
-		return s.checkUserPermission(groupRequest.ID, ctx.UserID)
 	case models.ActionCreate:
-		if groupRequest.CreateBy != 0 && ctx.UserID != groupRequest.CreateBy {
+		if groupRequest.CreateBy != 0 && ctx.Uid != groupRequest.CreateBy {
 			return denied
 		}
+	case models.ActionGet:
+		return s.checkUserPermission(groupRequest.ID, ctx.Uid)
 	case models.ActionEdit, models.ActionEditRole, models.ActionInvite, models.ActionExpel, models.ActionRemove:
-		return s.checkAdminPermission(groupRequest.ID, ctx.UserID)
+		return s.checkAdminPermission(groupRequest.ID, ctx.Uid)
 	}
 	return denied
 }
@@ -242,7 +232,7 @@ func (s *service) AddGroupInviteLink(ctx context.Context, request models.AddInvi
 		b.WriteRune(chars[rand.Intn(len(chars))])
 	}
 	line := b.String()
-	err = s.groupStorage.AddShortLinkToGroup(request.Group, line, ctx.Session.UserID)
+	err = s.groupStorage.AddShortLinkToGroup(request.Group, line, ctx.Session.Uid)
 	if err != nil {
 		return
 	}

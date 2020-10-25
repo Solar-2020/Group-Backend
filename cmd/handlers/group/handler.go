@@ -3,7 +3,6 @@ package groupHandler
 import (
 	"github.com/Solar-2020/GoUtils/context"
 	httputils "github.com/Solar-2020/GoUtils/http"
-	"github.com/Solar-2020/GoUtils/session"
 	"github.com/Solar-2020/Group-Backend/internal/models"
 	"github.com/valyala/fasthttp"
 )
@@ -38,23 +37,19 @@ func NewHandler(groupService groupService, groupTransport groupTransport, errorW
 }
 
 func (h *handler) Create(ctx *fasthttp.RequestCtx) {
-	req, err := h.groupTransport.CreateDecode(ctx)
+	group, err := h.groupTransport.CreateDecode(ctx)
 	if err != nil {
 		h.handleError(err, ctx)
 		return
 	}
 
-	ctx_ := context.Context{
-		RequestCtx: ctx,
-		Session:    &session.Session{},
-	}
-	err = ctx_.Session.Authorise(ctx, req)
+	ctx_, err := context.NewContext(ctx)
 	if err != nil {
 		h.handleError(err, ctx)
 		return
 	}
 
-	groupReturn, err := h.groupService.Create(ctx_, req)
+	groupReturn, err := h.groupService.Create(ctx_, group)
 	if err != nil {
 		h.handleError(err, ctx)
 		return
@@ -68,29 +63,19 @@ func (h *handler) Create(ctx *fasthttp.RequestCtx) {
 }
 
 func (h *handler) Update(ctx *fasthttp.RequestCtx) {
-	req, err := h.groupTransport.UpdateDecode(ctx)
+	group, _, err := h.groupTransport.UpdateDecode(ctx)
 	if err != nil {
 		h.handleError(err, ctx)
 		return
 	}
 
-	ctx_ := context.Context{
-		RequestCtx: ctx,
-		Session:    &session.Session{},
-	}
-	err = ctx_.Session.Authorise(ctx, req)
+	ctx_, err := context.NewContext(ctx)
 	if err != nil {
 		h.handleError(err, ctx)
 		return
 	}
 
-	err = h.groupService.CheckPermission(ctx_, req.Group, models.ActionEditRole)
-	if err != nil {
-		h.handleError(err, ctx)
-		return
-	}
-
-	groupReturn, err := h.groupService.Update(ctx_, req)
+	groupReturn, err := h.groupService.Update(ctx_, group)
 	if err != nil {
 		h.handleError(err, ctx)
 		return
@@ -104,29 +89,19 @@ func (h *handler) Update(ctx *fasthttp.RequestCtx) {
 }
 
 func (h *handler) Delete(ctx *fasthttp.RequestCtx) {
-	req, err := h.groupTransport.DeleteDecode(ctx)
+	groupID, _, err := h.groupTransport.DeleteDecode(ctx)
 	if err != nil {
 		h.handleError(err, ctx)
 		return
 	}
 
-	ctx_ := context.Context{
-		RequestCtx: ctx,
-		Session:    &session.Session{},
-	}
-	err = ctx_.Session.Authorise(ctx, req)
+	ctx_, err := context.NewContext(ctx)
 	if err != nil {
 		h.handleError(err, ctx)
 		return
 	}
 
-	err = h.groupService.CheckPermission(ctx_, models.Group{ID: req.GroupID}, models.ActionEditRole)
-	if err != nil {
-		h.handleError(err, ctx)
-		return
-	}
-
-	group, err := h.groupService.Delete(ctx_, req)
+	group, err := h.groupService.Delete(ctx_, groupID)
 	if err != nil {
 		h.handleError(err, ctx)
 		return
@@ -140,29 +115,19 @@ func (h *handler) Delete(ctx *fasthttp.RequestCtx) {
 }
 
 func (h *handler) Get(ctx *fasthttp.RequestCtx) {
-	request, err := h.groupTransport.GetDecode(ctx)
+	groupID, _, err := h.groupTransport.GetDecode(ctx)
 	if err != nil {
 		h.handleError(err, ctx)
 		return
 	}
 
-	ctx_ := context.Context{
-		RequestCtx: ctx,
-		Session:    &session.Session{},
-	}
-	err = ctx_.Session.Authorise(ctx, request)
+	ctx_, err := context.NewContext(ctx)
 	if err != nil {
 		h.handleError(err, ctx)
 		return
 	}
 
-	err = h.groupService.CheckPermission(ctx_, models.Group{ID: request.GroupID}, models.ActionEditRole)
-	if err != nil {
-		h.handleError(err, ctx)
-		return
-	}
-
-	group, err := h.groupService.Get(ctx_, request)
+	group, err := h.groupService.Get(ctx_, groupID)
 	if err != nil {
 		h.handleError(err, ctx)
 		return
@@ -176,23 +141,19 @@ func (h *handler) Get(ctx *fasthttp.RequestCtx) {
 }
 
 func (h *handler) GetList(ctx *fasthttp.RequestCtx) {
-	request, err := h.groupTransport.GetListDecode(ctx)
+	_, err := h.groupTransport.GetListDecode(ctx)
 	if err != nil {
 		h.handleError(err, ctx)
 		return
 	}
 
-	ctx_ := context.Context{
-		RequestCtx: ctx,
-		Session:    &session.Session{},
-	}
-	err = ctx_.Session.Authorise(ctx, request)
+	ctx_, err := context.NewContext(ctx)
 	if err != nil {
 		h.handleError(err, ctx)
 		return
 	}
 
-	groupList, err := h.groupService.GetList(ctx_, request)
+	groupList, err := h.groupService.GetList(ctx_)
 	if err != nil {
 		h.handleError(err, ctx)
 		return
@@ -212,11 +173,7 @@ func (h *handler) Invite(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	ctx_ := context.Context{
-		RequestCtx: ctx,
-		Session:    &session.Session{},
-	}
-	err = ctx_.Session.Authorise(ctx, request)
+	ctx_, err := context.NewContext(ctx)
 	if err != nil {
 		h.handleError(err, ctx)
 		return
@@ -248,11 +205,7 @@ func (h *handler) EditRole(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	ctx_ := context.Context{
-		RequestCtx: ctx,
-		Session:    &session.Session{},
-	}
-	err = ctx_.Session.Authorise(ctx, request)
+	ctx_, err := context.NewContext(ctx)
 	if err != nil {
 		h.handleError(err, ctx)
 		return
@@ -282,21 +235,18 @@ func (h *handler) Expel(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	ctx_ := context.Context{
-		RequestCtx: ctx,
-		Session:    &session.Session{},
-	}
-	err = ctx_.Session.Authorise(ctx, request)
+	ctx_, err := context.NewContext(ctx)
 	if err != nil {
 		h.handleError(err, ctx)
 		return
 	}
-	err = h.groupService.CheckPermission(ctx_, models.Group{ID: request.Group}, models.ActionExpel)
 
+	err = h.groupService.CheckPermission(ctx_, models.Group{ID: request.Group}, models.ActionExpel)
 	if err != nil {
 		h.handleError(err, ctx)
 		return
 	}
+
 	response, err := h.groupService.ExpelUser(ctx_, request)
 	if err != nil {
 		h.handleError(err, ctx)
@@ -317,11 +267,7 @@ func (h *handler) Resolve(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	ctx_ := context.Context{
-		RequestCtx: ctx,
-		Session:    &session.Session{},
-	}
-	err = ctx_.Session.Authorise(ctx, request)
+	ctx_, err := context.NewOpenContext(ctx)
 	if err != nil {
 		h.handleError(err, ctx)
 		return
@@ -345,18 +291,13 @@ func (h *handler) AddLink(ctx *fasthttp.RequestCtx) {
 		h.handleError(err, ctx)
 		return
 	}
-
-	ctx_ := context.Context{
-		RequestCtx: ctx,
-		Session:    &session.Session{},
-	}
-	err = ctx_.Session.Authorise(ctx, request)
+	ctx_, err := context.NewContext(ctx)
 	if err != nil {
 		h.handleError(err, ctx)
 		return
 	}
-	err = h.groupService.CheckPermission(ctx_, models.Group{ID: request.Group}, models.ActionExpel)
 
+	err = h.groupService.CheckPermission(ctx_, models.Group{ID: request.Group}, models.ActionExpel)
 	if err != nil {
 		h.handleError(err, ctx)
 		return
@@ -380,17 +321,13 @@ func (h *handler) RemoveLink(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	ctx_ := context.Context{
-		RequestCtx: ctx,
-		Session:    &session.Session{},
-	}
-	err = ctx_.Session.Authorise(ctx, request)
+	ctx_, err := context.NewContext(ctx)
 	if err != nil {
 		h.handleError(err, ctx)
 		return
 	}
-	err = h.groupService.CheckPermission(ctx_, models.Group{ID: request.Group}, models.ActionExpel)
 
+	err = h.groupService.CheckPermission(ctx_, models.Group{ID: request.Group}, models.ActionExpel)
 	if err != nil {
 		h.handleError(err, ctx)
 		return
@@ -414,21 +351,19 @@ func (h *handler) ListLinks(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	ctx_ := context.Context{
-		RequestCtx: ctx,
-		Session:    &session.Session{},
-	}
-	err = ctx_.Session.Authorise(ctx, request)
-	if err != nil {
-		h.handleError(err, ctx)
-		return
-	}
-	err = h.groupService.CheckPermission(ctx_, models.Group{ID: request.Group}, models.ActionExpel)
 
+	ctx_, err := context.NewContext(ctx)
 	if err != nil {
 		h.handleError(err, ctx)
 		return
 	}
+
+	err = h.groupService.CheckPermission(ctx_, models.Group{ID: request.Group}, models.ActionExpel)
+	if err != nil {
+		h.handleError(err, ctx)
+		return
+	}
+
 	response, err := h.groupService.ListGroupInviteLink(ctx_, request)
 	if err != nil {
 		h.handleError(err, ctx)
