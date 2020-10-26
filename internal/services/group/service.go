@@ -203,19 +203,19 @@ func (s *service) ExpelUser(ctx context.Context, request models.ExpelUserRequest
 func (s *service) CheckPermission(ctx context.Context, groupRequest models.Group, action models.GroupAction) error {
 	denied := fmt.Errorf("denied")
 	if action == models.ActionCreate {
-		if groupRequest.CreateBy != 0 && ctx.Uid != groupRequest.CreateBy {
+		if groupRequest.CreateBy != 0 && ctx.Session.Uid != groupRequest.CreateBy {
 			return denied
 		}
 	}
 	switch action {
 	case models.ActionCreate:
-		if groupRequest.CreateBy != 0 && ctx.Uid != groupRequest.CreateBy {
+		if groupRequest.CreateBy != 0 && ctx.Session.Uid != groupRequest.CreateBy {
 			return denied
 		}
 	case models.ActionGet:
-		return s.checkUserPermission(groupRequest.ID, ctx.Uid)
+		return s.checkUserPermission(groupRequest.ID, ctx.Session.Uid)
 	case models.ActionEdit, models.ActionEditRole, models.ActionInvite, models.ActionExpel, models.ActionRemove:
-		return s.checkAdminPermission(groupRequest.ID, ctx.Uid)
+		return s.checkAdminPermission(groupRequest.ID, ctx.Session.Uid)
 	}
 	return denied
 }
