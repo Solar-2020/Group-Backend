@@ -31,6 +31,7 @@ type Group struct {
 	CreatAt     time.Time `json:"creatAt"`
 	AvatarURL   string    `json:"avatarURL"`
 	StatusID    int       `json:"-"`
+	Count	 	int		  `json:"count"`
 }
 
 type GroupPreview struct {
@@ -43,6 +44,7 @@ type GroupPreview struct {
 	UserRoleID  MemberRole    `json:"userRoleID"`
 	UserRole    string `json:"userRole"`
 	Status		int 	`json:"status"`
+	Count	 	int		  `json:"count"`
 }
 
 type GroupInviteLink struct {

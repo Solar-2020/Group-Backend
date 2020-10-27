@@ -86,11 +86,13 @@ func (s *storage) SelectGroupByID(groupID int) (group models.Group, err error) {
 		   g.create_by,
 		   g.create_at,
 		   g.status_id,
-		   g.avatar_url
+		   g.avatar_url,
+		   g.members
 	FROM groups as g
 	WHERE g.id = $1;`
 
-	err = s.db.QueryRow(sqlQuery, groupID).Scan(&group.ID, &group.Title, &group.Description, &group.URL, &group.CreateBy, &group.CreatAt, &group.StatusID, &group.AvatarURL)
+	err = s.db.QueryRow(sqlQuery, groupID).Scan(&group.ID, &group.Title, &group.Description, &group.URL,
+		&group.CreateBy, &group.CreatAt, &group.StatusID, &group.AvatarURL, &group.Count)
 	return
 }
 
@@ -159,7 +161,8 @@ func (s *storage) SelectGroupsByUserID(userID int) (groups []models.GroupPreview
 		   g.avatar_url,
 		   r.id,
 		   r.title,
-		   g.status_id
+		   g.status_id,
+		   g.members
 	FROM groups AS g
 			 JOIN users_groups AS ug ON g.id = ug.group_id
 			 JOIN roles AS r ON ug.role_id = r.id
@@ -174,7 +177,7 @@ func (s *storage) SelectGroupsByUserID(userID int) (groups []models.GroupPreview
 	for rows.Next() {
 		var tempGroup models.GroupPreview
 		err = rows.Scan(&tempGroup.ID, &tempGroup.Title, &tempGroup.Description, &tempGroup.URL,
-			&tempGroup.AvatarURL, &tempGroup.UserRoleID, &tempGroup.UserRole, &tempGroup.Status)
+			&tempGroup.AvatarURL, &tempGroup.UserRoleID, &tempGroup.UserRole, &tempGroup.Status, &tempGroup.Count)
 		if err != nil {
 			return
 		}

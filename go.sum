@@ -1,3 +1,5 @@
+github.com/Solar-2020/GoUtils v0.0.0-20201025130636-cfe0c30bd712/go.mod h1:JgUyQ2m5+AxfNqe6/llRQGOxCeisBqBn/sp3Wt/elhU=
+github.com/Solar-2020/GoUtils v0.0.0-20201026171357-1ce3d6989804 h1:Vcnm6o7lHmaJBoJ3BwjDXiU+Cuadbt0/30d05noWyu0=
 github.com/Solar-2020/GoUtils v0.0.0-20201026171357-1ce3d6989804/go.mod h1:JgUyQ2m5+AxfNqe6/llRQGOxCeisBqBn/sp3Wt/elhU=
 github.com/andybalholm/brotli v1.0.0 h1:7UCwP93aiSfvWpapti8g88vVVGp2qqtGyePsSuDafo4=
 github.com/andybalholm/brotli v1.0.0/go.mod h1:loMXtMfwqflxFJPmdbJO0a3KNoPuLBgiu3qAvBg8x/Y=
