@@ -2,6 +2,8 @@ package main
 
 import (
 	"database/sql"
+	authapi "github.com/Solar-2020/Authorization-Backend/pkg/api"
+	"github.com/Solar-2020/GoUtils/context/session"
 	httputils "github.com/Solar-2020/GoUtils/http"
 	"github.com/Solar-2020/GoUtils/http/errorWorker"
 	"github.com/Solar-2020/Group-Backend/cmd/handlers"
@@ -41,6 +43,11 @@ func main() {
 	groupStorage := groupStorage.NewStorage(groupDB)
 	groupService := group.NewService(groupStorage)
 	groupTransport := group.NewTransport()
+
+	authService := authapi.AuthClient{
+		Addr:    internal.Config.AuthServiceAddress,
+	}
+	session.RegisterAuthService(&authService)
 
 	groupHandler := groupHandler.NewHandler(groupService, groupTransport, errorWorker)
 
