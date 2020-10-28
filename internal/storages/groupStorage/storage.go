@@ -3,7 +3,7 @@ package groupStorage
 import (
 	"database/sql"
 	"fmt"
-	"github.com/Solar-2020/Group-Backend/internal/models"
+	models2 "github.com/Solar-2020/Group-Backend/pkg/models"
 	"github.com/lib/pq"
 )
 
@@ -15,12 +15,12 @@ const (
 )
 
 type Storage interface {
-	InsertGroup(group models.Group) (groupReturn models.Group, err error)
-	UpdateGroup(group models.Group) (groupReturn models.Group, err error)
-	UpdateGroupStatus(groupID, statusID int) (group models.Group, err error)
-	SelectGroupByID(groupID int) (group models.Group, err error)
+	InsertGroup(group models2.Group) (groupReturn models2.Group, err error)
+	UpdateGroup(group models2.Group) (groupReturn models2.Group, err error)
+	UpdateGroupStatus(groupID, statusID int) (group models2.Group, err error)
+	SelectGroupByID(groupID int) (group models2.Group, err error)
 	SelectGroupRole(groupID, userID int) (roleID int, err error)
-	SelectGroupsByUserID(userID int) (group []models.GroupPreview, err error)
+	SelectGroupsByUserID(userID int, groupID int) (group []models2.GroupPreview, err error)
 
 	InsertUser(groupID, userID, roleID int) (err error)
 	EditUserRole(groupID, userID, roleID int) (resultRole int, err error)
@@ -28,7 +28,7 @@ type Storage interface {
 
 	HashToGroupID(line string) (groupID  int, err error)
 	RemoveLinkToGroup(groupID int, link string) (err error)
-	ListShortLinksToGroup(groupID int) (res []models.GroupInviteLink, err error)
+	ListShortLinksToGroup(groupID int) (res []models2.GroupInviteLink, err error)
 	AddShortLinkToGroup(groupID int, link string, author int) (err error)
 }
 
@@ -42,7 +42,7 @@ func NewStorage(db *sql.DB) Storage {
 	}
 }
 
-func (s *storage) InsertGroup(group models.Group) (groupReturn models.Group, err error) {
+func (s *storage) InsertGroup(group models2.Group) (groupReturn models2.Group, err error) {
 	const sqlQuery = `
 	INSERT INTO groups(title, description, url, create_by, avatar_url)
 	VALUES ($1, $2, $3, $4, $5)
@@ -52,7 +52,7 @@ func (s *storage) InsertGroup(group models.Group) (groupReturn models.Group, err
 	return group, err
 }
 
-func (s *storage) UpdateGroup(group models.Group) (groupReturn models.Group, err error) {
+func (s *storage) UpdateGroup(group models2.Group) (groupReturn models2.Group, err error) {
 	const sqlQuery = `
 	UPDATE groups.groups
 	SET title=$1,
@@ -66,7 +66,7 @@ func (s *storage) UpdateGroup(group models.Group) (groupReturn models.Group, err
 	return group, err
 }
 
-func (s *storage) UpdateGroupStatus(groupID, statusID int) (group models.Group, err error) {
+func (s *storage) UpdateGroupStatus(groupID, statusID int) (group models2.Group, err error) {
 	const sqlQuery = `
 	UPDATE groups
 	SET status_id = $1
@@ -77,7 +77,7 @@ func (s *storage) UpdateGroupStatus(groupID, statusID int) (group models.Group, 
 	return
 }
 
-func (s *storage) SelectGroupByID(groupID int) (group models.Group, err error) {
+func (s *storage) SelectGroupByID(groupID int) (group models2.Group, err error) {
 	const sqlQuery = `
 	SELECT g.id,
 		   g.title,
@@ -152,7 +152,7 @@ func (s *storage) RemoveUser(groupID, userID int) (err error) {
 }
 
 
-func (s *storage) SelectGroupsByUserID(userID int) (groups []models.GroupPreview, err error) {
+func (s *storage) SelectGroupsByUserID(userID int, groupID int) (groups []models2.GroupPreview, err error) {
 	const sqlQuery = `
 	SELECT g.id,
 		   g.title,
@@ -167,15 +167,23 @@ func (s *storage) SelectGroupsByUserID(userID int) (groups []models.GroupPreview
 			 JOIN users_groups AS ug ON g.id = ug.group_id
 			 JOIN roles AS r ON ug.role_id = r.id
 	WHERE ug.user_id = $1`
+	params := []interface{}{
+		userID,
+	}
+	query := sqlQuery
+	if groupID != 0 {
+		query += ` AND ug.group_id=$2`
+		params = append(params, groupID)
+	}
 
-	groups = make([]models.GroupPreview, 0)
-	rows, err := s.db.Query(sqlQuery, userID)
+	groups = make([]models2.GroupPreview, 0)
+	rows, err := s.db.Query(query, params...)
 	if err != nil {
 		return
 	}
 	defer rows.Close()
 	for rows.Next() {
-		var tempGroup models.GroupPreview
+		var tempGroup models2.GroupPreview
 		err = rows.Scan(&tempGroup.ID, &tempGroup.Title, &tempGroup.Description, &tempGroup.URL,
 			&tempGroup.AvatarURL, &tempGroup.UserRoleID, &tempGroup.UserRole, &tempGroup.Status, &tempGroup.Count)
 		if err != nil {
@@ -218,7 +226,7 @@ func (s *storage) AddShortLinkToGroup(groupID int, link string, author int) (err
 	return
 }
 
-func (s *storage) ListShortLinksToGroup(groupID int) (res []models.GroupInviteLink, err error) {
+func (s *storage) ListShortLinksToGroup(groupID int) (res []models2.GroupInviteLink, err error) {
 	const sqlTemplate = `SELECT link, created, author from %s WHERE group_id=$1`
 	query := fmt.Sprintf(sqlTemplate, groupLinksTable)
 
@@ -228,7 +236,7 @@ func (s *storage) ListShortLinksToGroup(groupID int) (res []models.GroupInviteLi
 	}
 
 	for rows.Next(){
-		link := models.GroupInviteLink{}
+		link := models2.GroupInviteLink{}
 		err = rows.Scan(&link.Link, &link.Added, &link.Author)
 		if err != nil {
 			return

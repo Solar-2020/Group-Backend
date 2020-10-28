@@ -12,23 +12,26 @@ func NewFastHttpRouter(group groupHandler.Handler, middleware httputils.Middlewa
 	//router.Handle("GET", "/health", check)
 
 	router.PanicHandler = httputils.PanicHandler
-	middlewareChain := httputils.NewLogCorsChain(middleware)
+	clientside := httputils.ClientsideChain(middleware)
 	router.Handle("GET", "/health", middleware.Log(httputils.HealthCheckHandler))
 
-	router.Handle("POST", "/group/group", middlewareChain(group.Create))
-	router.Handle("DELETE", "/group/group/:groupID", middlewareChain(group.Delete))
-	router.Handle("PUT", "/group/group/:groupID", middlewareChain(group.Update))
-	router.Handle("GET", "/group/group/:groupID", middlewareChain(group.Get))
-	router.Handle("GET", "/group/list", middlewareChain(group.GetList))
+	router.Handle("POST", "/group/group", clientside(group.Create))
+	router.Handle("DELETE", "/group/group/:groupID", clientside(group.Delete))
+	router.Handle("PUT", "/group/group/:groupID", clientside(group.Update))
+	router.Handle("GET", "/group/group/:groupID", clientside(group.Get))
+	router.Handle("GET", "/group/list", clientside(group.GetList))
 
-	router.Handle("PUT", "/group/membership/:groupID", middlewareChain(group.Invite))
-	router.Handle("POST", "/group/membership", middlewareChain(group.EditRole))
-	router.Handle("DELETE", "/group/membership", middlewareChain(group.Expel))
+	router.Handle("PUT", "/group/membership/:groupID", clientside(group.Invite))
+	router.Handle("POST", "/group/membership", clientside(group.EditRole))
+	router.Handle("DELETE", "/group/membership", clientside(group.Expel))
 
-	router.Handle("PUT", "/group/invite/:groupID", middlewareChain(group.AddLink))
-	router.Handle("DELETE", "/group/invite", middlewareChain(group.RemoveLink))
-	router.Handle("POST", "/group/invite/list", middlewareChain(group.ListLinks))
-	router.Handle("POST", "/group/invite/resolve", middlewareChain(group.Resolve))
+	router.Handle("PUT", "/group/invite/:groupID", clientside(group.AddLink))
+	router.Handle("DELETE", "/group/invite", clientside(group.RemoveLink))
+	router.Handle("POST", "/group/invite/list", clientside(group.ListLinks))
+	router.Handle("POST", "/group/invite/resolve", clientside(group.Resolve))
+
+	serverside := httputils.ServersideChain(middleware)
+	router.Handle("GET", "/internal/group/list", serverside(group.GetList))
 
 	return router
 }

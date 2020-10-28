@@ -6,6 +6,7 @@ import (
 	"github.com/Solar-2020/GoUtils/context"
 	"github.com/Solar-2020/Group-Backend/internal"
 	"github.com/Solar-2020/Group-Backend/internal/models"
+	models2 "github.com/Solar-2020/Group-Backend/pkg/models"
 	"math/rand"
 	"regexp"
 	"strings"
@@ -13,11 +14,11 @@ import (
 )
 
 type Service interface {
-	Create(ctx context.Context, request models.Group) (response models.Group, err error)
-	Update(ctx context.Context, group models.Group) (response models.Group, err error)
-	Delete(ctx context.Context, groupID int) (response models.Group, err error)
-	Get(ctx context.Context, groupID int) (response models.Group, err error)
-	GetList(ctx context.Context) (response []models.GroupPreview, err error)
+	Create(ctx context.Context, request models2.Group) (response models2.Group, err error)
+	Update(ctx context.Context, group models2.Group) (response models2.Group, err error)
+	Delete(ctx context.Context, groupID int) (response models2.Group, err error)
+	Get(ctx context.Context, groupID int) (response models2.Group, err error)
+	GetList(ctx context.Context, groupID int) (response []models2.GroupPreview, err error)
 
 	Invite(ctx context.Context, request models.InviteUserRequest) (response models.InviteUserResponse, err error)
 	ChangeRole(ctx context.Context, request models.ChangeRoleRequest) (response models.ChangeRoleResponse, err error)
@@ -28,7 +29,7 @@ type Service interface {
 	RemoveGroupInviteLink(ctx context.Context, request models.RemoveInviteLinkRequest) (response models.RemoveInviteLinkRsponse, err error)
 	ListGroupInviteLink(ctx context.Context, request models.ListInviteLinkRequest) (response models.ListInviteLinkResponse, err error)
 
-	CheckPermission(ctx context.Context, group models.Group, action models.GroupAction) error
+	CheckPermission(ctx context.Context, group models2.Group, action models2.GroupAction) error
 }
 
 var (
@@ -45,7 +46,7 @@ func NewService(groupStorage groupStorage) Service {
 	}
 }
 
-func (s *service) Create(ctx context.Context, request models.Group) (response models.Group, err error) {
+func (s *service) Create(ctx context.Context, request models2.Group) (response models2.Group, err error) {
 	request.CreateBy = ctx.Session.Uid
 	err = s.validateGroup(request)
 	if err != nil {
@@ -66,7 +67,7 @@ func (s *service) Create(ctx context.Context, request models.Group) (response mo
 	return
 }
 
-func (s *service) validateGroup(group models.Group) (err error) {
+func (s *service) validateGroup(group models2.Group) (err error) {
 	if len(group.URL) < 3 || len(group.URL) > 20 {
 		return errors.New("Недопустимая длина ссылки")
 	}
@@ -82,7 +83,7 @@ func (s *service) validateGroup(group models.Group) (err error) {
 	return
 }
 
-func (s *service) checkUnique(group models.Group) (err error) {
+func (s *service) checkUnique(group models2.Group) (err error) {
 
 	return
 }
@@ -113,7 +114,7 @@ func (s *service) checkUserPermission(groupID, userID int) (err error) {
 	return
 }
 
-func (s *service) Update(ctx context.Context, group models.Group) (response models.Group, err error) {
+func (s *service) Update(ctx context.Context, group models2.Group) (response models2.Group, err error) {
 	err = s.checkAdminPermission(group.ID, ctx.Session.Uid)
 	if err != nil {
 		return
@@ -134,7 +135,7 @@ func (s *service) Update(ctx context.Context, group models.Group) (response mode
 	return
 }
 
-func (s *service) Delete(ctx context.Context, groupID int) (response models.Group, err error) {
+func (s *service) Delete(ctx context.Context, groupID int) (response models2.Group, err error) {
 	err = s.checkAdminPermission(groupID, ctx.Session.Uid)
 	if err != nil {
 		return
@@ -145,7 +146,7 @@ func (s *service) Delete(ctx context.Context, groupID int) (response models.Grou
 	return
 }
 
-func (s *service) Get(ctx context.Context, groupID int) (response models.Group, err error) {
+func (s *service) Get(ctx context.Context, groupID int) (response models2.Group, err error) {
 	err = s.checkUserPermission(groupID, ctx.Session.Uid)
 	if err != nil {
 		return
@@ -156,8 +157,8 @@ func (s *service) Get(ctx context.Context, groupID int) (response models.Group, 
 	return
 }
 
-func (s *service) GetList(ctx context.Context) (response []models.GroupPreview, err error) {
-	response, err = s.groupStorage.SelectGroupsByUserID(ctx.Session.Uid)
+func (s *service) GetList(ctx context.Context, groupID int) (response []models2.GroupPreview, err error) {
+	response, err = s.groupStorage.SelectGroupsByUserID(ctx.Session.Uid, groupID)
 	return
 }
 
@@ -187,7 +188,7 @@ func (s *service) ChangeRole(ctx context.Context, request models.ChangeRoleReque
 	// TODO: userEmail -> userID
 	userID := request.UserID
 	newRole, err := s.groupStorage.EditUserRole(request.Group, userID, int(request.Role))
-	response.Role = models.MemberRole(newRole)
+	response.Role = models2.MemberRole(newRole)
 	return
 }
 
@@ -200,21 +201,21 @@ func (s *service) ExpelUser(ctx context.Context, request models.ExpelUserRequest
 }
 
 
-func (s *service) CheckPermission(ctx context.Context, groupRequest models.Group, action models.GroupAction) error {
+func (s *service) CheckPermission(ctx context.Context, groupRequest models2.Group, action models2.GroupAction) error {
 	denied := fmt.Errorf("denied")
-	if action == models.ActionCreate {
+	if action == models2.ActionCreate {
 		if groupRequest.CreateBy != 0 && ctx.Session.Uid != groupRequest.CreateBy {
 			return denied
 		}
 	}
 	switch action {
-	case models.ActionCreate:
+	case models2.ActionCreate:
 		if groupRequest.CreateBy != 0 && ctx.Session.Uid != groupRequest.CreateBy {
 			return denied
 		}
-	case models.ActionGet:
+	case models2.ActionGet:
 		return s.checkUserPermission(groupRequest.ID, ctx.Session.Uid)
-	case models.ActionEdit, models.ActionEditRole, models.ActionInvite, models.ActionExpel, models.ActionRemove:
+	case models2.ActionEdit, models2.ActionEditRole, models2.ActionInvite, models2.ActionExpel, models2.ActionRemove:
 		return s.checkAdminPermission(groupRequest.ID, ctx.Session.Uid)
 	}
 	return denied

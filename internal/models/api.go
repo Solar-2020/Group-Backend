@@ -1,23 +1,25 @@
 package models
 
+import "github.com/Solar-2020/Group-Backend/pkg/models"
+
 // PUT /group/membership
 type InviteUserRequest struct {
-	UserID []int 	`json:"userId"`
-	Group int	`json:"group" validate:"required"`
-	User []string		`json:"userEmail"`
-	Role MemberRole	`json:"role"`
+	UserID []int             `json:"userId"`
+	Group  int               `json:"group" validate:"required"`
+	User   []string          `json:"userEmail"`
+	Role   models.MemberRole `json:"role"`
 }
 type InviteUserResponse InviteUserRequest
 
 // POST /group/membership
 type ChangeRoleRequest struct {
-	UserID int 	`json:"userId"`
-	Group int	`json:"group" validate:"required"`
-	User string		`json:"userEmail" validate:"required,email"`
-	Role MemberRole	`json:"role"`
+	UserID int               `json:"userId"`
+	Group  int               `json:"group" validate:"required"`
+	User   string            `json:"userEmail" validate:"required,email"`
+	Role   models.MemberRole `json:"role"`
 }
 type ChangeRoleResponse struct {
-	Role MemberRole	`json:"role"`
+	Role models.MemberRole `json:"role"`
 }
 
 // DELETE /group/membership
@@ -54,8 +56,8 @@ type ListInviteLinkRequest struct {
 	Group int `json:"group" validate:"required"`
 }
 type ListInviteLinkResponse struct {
-	Group int `json:"group"`
-	Links []GroupInviteLink	`json:"links"`
+	Group int                      `json:"group"`
+	Links []models.GroupInviteLink `json:"links"`
 }
 
 // POST /group/invite/resolves

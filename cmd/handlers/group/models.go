@@ -3,15 +3,16 @@ package groupHandler
 import (
 	"github.com/Solar-2020/GoUtils/context"
 	"github.com/Solar-2020/Group-Backend/internal/models"
+	models2 "github.com/Solar-2020/Group-Backend/pkg/models"
 	"github.com/valyala/fasthttp"
 )
 
 type groupService interface {
-	Create(ctx context.Context, request models.Group) (response models.Group, err error)
-	Update(ctx context.Context, request models.Group) (response models.Group, err error)
-	Delete(ctx context.Context, groupID int) (response models.Group, err error)
-	Get(ctx context.Context, groupID int) (response models.Group, err error)
-	GetList(ctx context.Context) (response []models.GroupPreview, err error)
+	Create(ctx context.Context, request models2.Group) (response models2.Group, err error)
+	Update(ctx context.Context, request models2.Group) (response models2.Group, err error)
+	Delete(ctx context.Context, groupID int) (response models2.Group, err error)
+	Get(ctx context.Context, groupID int) (response models2.Group, err error)
+	GetList(ctx context.Context, groupID int) (response []models2.GroupPreview, err error)
 
 	Invite(ctx context.Context, request models.InviteUserRequest) (response models.InviteUserResponse, err error)
 	ChangeRole(ctx context.Context, request models.ChangeRoleRequest) (response models.ChangeRoleResponse, err error)
@@ -23,24 +24,24 @@ type groupService interface {
 	ListGroupInviteLink(ctx context.Context, request models.ListInviteLinkRequest) (response models.ListInviteLinkResponse, err error)
 
 
-	CheckPermission(ctx context.Context, group models.Group, action models.GroupAction) error
+	CheckPermission(ctx context.Context, group models2.Group, action models2.GroupAction) error
 }
 
 type groupTransport interface {
-	CreateDecode(ctx *fasthttp.RequestCtx) (request models.Group, err error)
-	CreateEncode(response models.Group, ctx *fasthttp.RequestCtx) (err error)
+	CreateDecode(ctx *fasthttp.RequestCtx) (request models2.Group, err error)
+	CreateEncode(response models2.Group, ctx *fasthttp.RequestCtx) (err error)
 
-	UpdateDecode(ctx *fasthttp.RequestCtx) (request models.Group, userID int, err error)
-	UpdateEncode(response models.Group, ctx *fasthttp.RequestCtx) (err error)
+	UpdateDecode(ctx *fasthttp.RequestCtx) (request models2.Group, userID int, err error)
+	UpdateEncode(response models2.Group, ctx *fasthttp.RequestCtx) (err error)
 
 	DeleteDecode(ctx *fasthttp.RequestCtx) (groupID, userID int, err error)
-	DeleteEncode(response models.Group, ctx *fasthttp.RequestCtx) (err error)
+	DeleteEncode(response models2.Group, ctx *fasthttp.RequestCtx) (err error)
 
 	GetDecode(ctx *fasthttp.RequestCtx) (groupID, userID int, err error)
-	GetEncode(response models.Group, ctx *fasthttp.RequestCtx) (err error)
+	GetEncode(response models2.Group, ctx *fasthttp.RequestCtx) (err error)
 
-	GetListDecode(ctx *fasthttp.RequestCtx) (userID int, err error)
-	GetListEncode(response []models.GroupPreview, ctx *fasthttp.RequestCtx) (err error)
+	GetListDecode(ctx *fasthttp.RequestCtx) (userID, groupID int, err error)
+	GetListEncode(response []models2.GroupPreview, ctx *fasthttp.RequestCtx) (err error)
 
 	InviteDecode(ctx *fasthttp.RequestCtx) (request models.InviteUserRequest, err error)
 	ChangeRoleDecode(ctx *fasthttp.RequestCtx) (request models.ChangeRoleRequest, err error)
