@@ -28,7 +28,7 @@ func (r *UsersGroupsRequest) QueryParams() (values urllib.Values, err error) {
 	return
 }
 func (c *GroupClient) UsersGroupsPreview(userID, groupID int) (res []models2.GroupPreview, err error) {
-	const endpoind = "/internal/group/list"
+	const endpoind = "/api/internal/group/list"
 	req := UsersGroupsRequest{
 		Uid:     userID,
 		GroupID: groupID,
