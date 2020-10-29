@@ -15,7 +15,7 @@ func NewFastHttpRouter(group groupHandler.Handler, middleware httputils.Middlewa
 	clientside := httputils.ClientsideChain(middleware)
 	router.Handle("GET", "/health", middleware.Log(httputils.HealthCheckHandler))
 
-	router.Handle("POST", "api//group/group", clientside(group.Create))
+	router.Handle("POST", "/api/group/group", clientside(group.Create))
 	router.Handle("DELETE", "/api/group/group/:groupID", clientside(group.Delete))
 	router.Handle("PUT", "/api/group/group/:groupID", clientside(group.Update))
 	router.Handle("GET", "/api/group/group/:groupID", clientside(group.Get))
