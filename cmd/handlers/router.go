@@ -9,7 +9,7 @@ import (
 func NewFastHttpRouter(group groupHandler.Handler, middleware httputils.Middleware) *fasthttprouter.Router {
 	router := fasthttprouter.New()
 
-	//router.Handle("GET", "/health", check)
+	////router.Handle("GET", "/health", check)
 
 	router.PanicHandler = httputils.PanicHandler
 	clientside := httputils.ClientsideChain(middleware)
