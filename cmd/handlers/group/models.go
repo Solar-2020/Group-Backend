@@ -1,30 +1,28 @@
 package groupHandler
 
 import (
-	"github.com/Solar-2020/GoUtils/context"
 	"github.com/Solar-2020/Group-Backend/internal/models"
 	models2 "github.com/Solar-2020/Group-Backend/pkg/models"
 	"github.com/valyala/fasthttp"
 )
 
 type groupService interface {
-	Create(ctx context.Context, request models2.Group) (response models2.Group, err error)
-	Update(ctx context.Context, request models2.Group) (response models2.Group, err error)
-	Delete(ctx context.Context, groupID int) (response models2.Group, err error)
-	Get(ctx context.Context, groupID int) (response models2.Group, err error)
-	GetList(ctx context.Context, groupID int) (response []models2.GroupPreview, err error)
+	Create(request models2.Group) (response models2.Group, err error)
+	Update(request models2.Group, userID int) (response models2.Group, err error)
+	Delete(groupID, userID int) (response models2.Group, err error)
+	Get(groupID, userID int) (response models2.Group, err error)
+	GetList(groupID, userID int) (response []models2.GroupPreview, err error)
 
-	Invite(ctx context.Context, request models.InviteUserRequest) (response models.InviteUserResponse, err error)
-	ChangeRole(ctx context.Context, request models.ChangeRoleRequest) (response models.ChangeRoleResponse, err error)
-	ExpelUser(ctx context.Context, request models.ExpelUserRequest) (response models.ExpelUserResponse, err error)
+	Invite(request models.InviteUserRequest) (response models.InviteUserResponse, err error)
+	ChangeRole(request models.ChangeRoleRequest) (response models.ChangeRoleResponse, err error)
+	ExpelUser(request models.ExpelUserRequest) (response models.ExpelUserResponse, err error)
 
-	ResolveGroup(ctx context.Context, request models.ResolveInviteLinkRequest) (response models.ResolveInviteLinkResponse, err error)
-	AddGroupInviteLink(ctx context.Context, request models.AddInviteLinkRequest) (response models.AddInviteLinkResponse, err error)
-	RemoveGroupInviteLink(ctx context.Context, request models.RemoveInviteLinkRequest) (response models.RemoveInviteLinkRsponse, err error)
-	ListGroupInviteLink(ctx context.Context, request models.ListInviteLinkRequest) (response models.ListInviteLinkResponse, err error)
+	ResolveGroup(request models.ResolveInviteLinkRequest) (response models.ResolveInviteLinkResponse, err error)
+	AddGroupInviteLink(request models.AddInviteLinkRequest) (response models.AddInviteLinkResponse, err error)
+	RemoveGroupInviteLink(request models.RemoveInviteLinkRequest) (response models.RemoveInviteLinkRsponse, err error)
+	ListGroupInviteLink(request models.ListInviteLinkRequest) (response models.ListInviteLinkResponse, err error)
 
-
-	CheckPermission(ctx context.Context, group models2.Group, action models2.GroupAction) error
+	CheckPermission(group models2.Group, action models2.GroupAction) error
 }
 
 type groupTransport interface {

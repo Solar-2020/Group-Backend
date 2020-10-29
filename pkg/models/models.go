@@ -5,13 +5,15 @@ import (
 )
 
 type MemberRole int
+
 const (
 	roleCreator MemberRole = 1
-	roleAdmin = 2
-	roleDweller = 3
+	roleAdmin              = 2
+	roleDweller            = 3
 )
 
 type GroupAction int
+
 const (
 	ActionCreate GroupAction = iota
 	ActionEdit
@@ -23,7 +25,7 @@ const (
 )
 
 type Group struct {
-	ID          int   	  `json:"id"`
+	ID          int       `json:"id"`
 	Title       string    `json:"title" validate:"required"`
 	Description string    `json:"description"`
 	URL         string    `json:"URL" validate:"required"`
@@ -31,24 +33,24 @@ type Group struct {
 	CreatAt     time.Time `json:"creatAt"`
 	AvatarURL   string    `json:"avatarURL"`
 	StatusID    int       `json:"-"`
-	Count	 	int		  `json:"count"`
+	Count       int       `json:"count"`
 }
 
 type GroupPreview struct {
-	ID          int    `json:"id"`
-	Title       string `json:"title"`
-	Description string `json:"description"`
-	URL         string `json:"URL"`
-	AvatarURL   string `json:"avatarURL"`
-	UserID      int    `json:"userID"`
-	UserRoleID  MemberRole    `json:"userRoleID"`
-	UserRole    string `json:"userRole"`
-	Status		int 	`json:"status"`
-	Count	 	int		  `json:"count"`
+	ID          int        `json:"id"`
+	Title       string     `json:"title"`
+	Description string     `json:"description"`
+	URL         string     `json:"URL"`
+	AvatarURL   string     `json:"avatarURL"`
+	UserID      int        `json:"userID"`
+	UserRoleID  MemberRole `json:"userRoleID"`
+	UserRole    string     `json:"userRole"`
+	Status      int        `json:"status"`
+	Count       int        `json:"count"`
 }
 
 type GroupInviteLink struct {
-	Link string	`json:"link"`
-	Added time.Time		`json:"added"`
-	Author int	`json:"author"`
+	Link   string    `json:"link"`
+	Added  time.Time `json:"added"`
+	Author int       `json:"author"`
 }

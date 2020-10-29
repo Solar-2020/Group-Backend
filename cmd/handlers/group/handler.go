@@ -1,34 +1,33 @@
 package groupHandler
 
 import (
-	"github.com/Solar-2020/GoUtils/context"
-	httputils "github.com/Solar-2020/GoUtils/http"
-	models2 "github.com/Solar-2020/Group-Backend/pkg/models"
+	"github.com/Solar-2020/Group-Backend/internal/services/group"
+	"github.com/valyala/fasthttp"
 )
 
 type Handler interface {
-	Create(ctx context.Context)
-	Update(ctx context.Context)
-	Delete(ctx context.Context)
-	Get(ctx context.Context)
-	GetList(ctx context.Context)
-	//GetListInternal(ctx context.Context)
-	Invite(ctx context.Context)
-	EditRole(ctx context.Context)
-	Expel(ctx context.Context)
-	Resolve(ctx context.Context)
-	AddLink(ctx context.Context)
-	RemoveLink(ctx context.Context)
-	ListLinks(ctx context.Context)
+	Create(ctx *fasthttp.RequestCtx)
+	Update(ctx *fasthttp.RequestCtx)
+	Delete(ctx *fasthttp.RequestCtx)
+	Get(ctx *fasthttp.RequestCtx)
+	GetList(ctx *fasthttp.RequestCtx)
+	InternalGetList(ctx *fasthttp.RequestCtx)
+	//Invite(ctx *fasthttp.RequestCtx)
+	//EditRole(ctx *fasthttp.RequestCtx)
+	//Expel(ctx *fasthttp.RequestCtx)
+	//Resolve(ctx *fasthttp.RequestCtx)
+	//AddLink(ctx *fasthttp.RequestCtx)
+	//RemoveLink(ctx *fasthttp.RequestCtx)
+	//ListLinks(ctx *fasthttp.RequestCtx)
 }
 
 type handler struct {
-	groupService   groupService
-	groupTransport groupTransport
+	groupService   group.Service
+	groupTransport group.Transport
 	errorWorker    errorWorker
 }
 
-func NewHandler(groupService groupService, groupTransport groupTransport, errorWorker errorWorker) Handler {
+func NewHandler(groupService group.Service, groupTransport group.Transport, errorWorker errorWorker) Handler {
 	return &handler{
 		groupService:   groupService,
 		groupTransport: groupTransport,
@@ -36,108 +35,128 @@ func NewHandler(groupService groupService, groupTransport groupTransport, errorW
 	}
 }
 
-func (h *handler) Create(ctx context.Context) {
-	group, err := h.groupTransport.CreateDecode(ctx.RequestCtx)
+func (h *handler) Create(ctx *fasthttp.RequestCtx) {
+	group, err := h.groupTransport.CreateDecode(ctx)
 	if err != nil {
 		h.handleError(err, ctx)
 		return
 	}
 
-	groupReturn, err := h.groupService.Create(ctx, group)
+	groupReturn, err := h.groupService.Create(group)
 	if err != nil {
 		h.handleError(err, ctx)
 		return
 	}
 
-	err = h.groupTransport.CreateEncode(groupReturn, ctx.RequestCtx)
-	if err != nil {
-		h.handleError(err, ctx)
-		return
-	}
-}
-
-func (h *handler) Update(ctx context.Context) {
-	group, _, err := h.groupTransport.UpdateDecode(ctx.RequestCtx)
-	if err != nil {
-		h.handleError(err, ctx)
-		return
-	}
-
-	groupReturn, err := h.groupService.Update(ctx, group)
-	if err != nil {
-		h.handleError(err, ctx)
-		return
-	}
-
-	err = h.groupTransport.UpdateEncode(groupReturn, ctx.RequestCtx)
+	err = h.groupTransport.CreateEncode(groupReturn, ctx)
 	if err != nil {
 		h.handleError(err, ctx)
 		return
 	}
 }
 
-func (h *handler) Delete(ctx context.Context) {
-	groupID, _, err := h.groupTransport.DeleteDecode(ctx.RequestCtx)
+func (h *handler) Update(ctx *fasthttp.RequestCtx) {
+	group, userID, err := h.groupTransport.UpdateDecode(ctx)
 	if err != nil {
 		h.handleError(err, ctx)
 		return
 	}
 
-	group, err := h.groupService.Delete(ctx, groupID)
+	groupReturn, err := h.groupService.Update(group, userID)
 	if err != nil {
 		h.handleError(err, ctx)
 		return
 	}
 
-	err = h.groupTransport.DeleteEncode(group, ctx.RequestCtx)
-	if err != nil {
-		h.handleError(err, ctx)
-		return
-	}
-}
-
-func (h *handler) Get(ctx context.Context) {
-	groupID, _, err := h.groupTransport.GetDecode(ctx.RequestCtx)
-	if err != nil {
-		h.handleError(err, ctx)
-		return
-	}
-
-	group, err := h.groupService.Get(ctx, groupID)
-	if err != nil {
-		h.handleError(err, ctx)
-		return
-	}
-
-	err = h.groupTransport.GetEncode(group, ctx.RequestCtx)
+	err = h.groupTransport.UpdateEncode(groupReturn, ctx)
 	if err != nil {
 		h.handleError(err, ctx)
 		return
 	}
 }
 
-func (h *handler) GetList(ctx context.Context) {
-	_, groupID, err := h.groupTransport.GetListDecode(ctx.RequestCtx)
+func (h *handler) Delete(ctx *fasthttp.RequestCtx) {
+	groupID, userID, err := h.groupTransport.DeleteDecode(ctx)
 	if err != nil {
 		h.handleError(err, ctx)
 		return
 	}
 
-	groupList, err := h.groupService.GetList(ctx, groupID)
+	group, err := h.groupService.Delete(groupID, userID)
 	if err != nil {
 		h.handleError(err, ctx)
 		return
 	}
 
-	err = h.groupTransport.GetListEncode(groupList, ctx.RequestCtx)
+	err = h.groupTransport.DeleteEncode(group, ctx)
 	if err != nil {
 		h.handleError(err, ctx)
 		return
 	}
 }
 
-//func (h *handler) GetListInternal(ctx context.Context) {
-//	userID, groupID, err := h.groupTransport.GetListDecode(ctx.RequestCtx)
+func (h *handler) Get(ctx *fasthttp.RequestCtx) {
+	groupID, userID, err := h.groupTransport.GetDecode(ctx)
+	if err != nil {
+		h.handleError(err, ctx)
+		return
+	}
+
+	group, err := h.groupService.Get(groupID, userID)
+	if err != nil {
+		h.handleError(err, ctx)
+		return
+	}
+
+	err = h.groupTransport.GetEncode(group, ctx)
+	if err != nil {
+		h.handleError(err, ctx)
+		return
+	}
+}
+
+func (h *handler) GetList(ctx *fasthttp.RequestCtx) {
+	userID, groupID, err := h.groupTransport.GetListDecode(ctx)
+	if err != nil {
+		h.handleError(err, ctx)
+		return
+	}
+
+	groupList, err := h.groupService.GetList(groupID, userID)
+	if err != nil {
+		h.handleError(err, ctx)
+		return
+	}
+
+	err = h.groupTransport.GetListEncode(groupList, ctx)
+	if err != nil {
+		h.handleError(err, ctx)
+		return
+	}
+}
+
+func (h *handler) InternalGetList(ctx *fasthttp.RequestCtx) {
+	userID, groupID, err := h.groupTransport.InternalGetListDecode(ctx)
+	if err != nil {
+		h.handleError(err, ctx)
+		return
+	}
+
+	groupList, err := h.groupService.GetList(groupID, userID)
+	if err != nil {
+		h.handleError(err, ctx)
+		return
+	}
+
+	err = h.groupTransport.InternalGetListEncode(groupList, ctx)
+	if err != nil {
+		h.handleError(err, ctx)
+		return
+	}
+}
+
+//func (h *handler) GetListInternal(ctx *fasthttp.RequestCtx) {
+//	userID, groupID, err := h.groupTransport.GetListDecode(ctx)
 //	if err != nil {
 //		h.handleError(err, ctx)
 //		return
@@ -145,192 +164,191 @@ func (h *handler) GetList(ctx context.Context) {
 //
 //	ctx.Session.Uid = userID
 //
-//	groupList, err := h.groupService.GetList(ctx, groupID)
+//	groupList, err := h.groupService.GetList(groupID)
 //	if err != nil {
 //		h.handleError(err, ctx)
 //		return
 //	}
 //
-//	err = h.groupTransport.GetListEncode(groupList, ctx.RequestCtx)
+//	err = h.groupTransport.GetListEncode(groupList, ctx)
 //	if err != nil {
 //		h.handleError(err, ctx)
 //		return
 //	}
 //}
 
-func (h *handler) Invite(ctx context.Context) {
-	request, err := h.groupTransport.InviteDecode(ctx.RequestCtx)
-	if err != nil {
-		h.handleError(err, ctx)
-		return
-	}
+//func (h *handler) Invite(ctx *fasthttp.RequestCtx) {
+//	request, err := h.groupTransport.InviteDecode(ctx)
+//	if err != nil {
+//		h.handleError(err, ctx)
+//		return
+//	}
+//
+//	err = h.groupService.CheckPermission(models2.Group{ID: request.Group}, models2.ActionEditRole)
+//	if err != nil {
+//		h.handleError(err, ctx)
+//		return
+//	}
+//
+//	response, err := h.groupService.Invite(request)
+//	if err != nil {
+//		h.handleError(err, ctx)
+//		return
+//	}
+//
+//	err = httputils.EncodeDefault(response, ctx)
+//	if err != nil {
+//		h.handleError(err, ctx)
+//		return
+//	}
+//}
 
-	err = h.groupService.CheckPermission(ctx, models2.Group{ID: request.Group}, models2.ActionEditRole)
-	if err != nil {
-		h.handleError(err, ctx)
-		return
-	}
+//func (h *handler) EditRole(ctx *fasthttp.RequestCtx) {
+//	request, err := h.groupTransport.ChangeRoleDecode(ctx)
+//	if err != nil {
+//		h.handleError(err, ctx)
+//		return
+//	}
+//
+//	err = h.groupService.CheckPermission(models2.Group{ID: request.Group}, models2.ActionEditRole)
+//	if err != nil {
+//		h.handleError(err, ctx)
+//		return
+//	}
+//	response, err := h.groupService.ChangeRole(request)
+//	if err != nil {
+//		h.handleError(err, ctx)
+//		return
+//	}
+//
+//	err = httputils.EncodeDefault(response, ctx)
+//	if err != nil {
+//		h.handleError(err, ctx)
+//	}
+//}
+//
+//func (h *handler) Expel(ctx *fasthttp.RequestCtx) {
+//	request, err := h.groupTransport.ExpelDecode(ctx)
+//	if err != nil {
+//		h.handleError(err, ctx)
+//		return
+//	}
+//
+//	err = h.groupService.CheckPermission(models2.Group{ID: request.Group}, models2.ActionExpel)
+//	if err != nil {
+//		h.handleError(err, ctx)
+//		return
+//	}
+//
+//	response, err := h.groupService.ExpelUser(request)
+//	if err != nil {
+//		h.handleError(err, ctx)
+//		return
+//	}
+//
+//	err = httputils.EncodeDefault(response, ctx)
+//	if err != nil {
+//		h.handleError(err, ctx)
+//		return
+//	}
+//}
 
-	response, err := h.groupService.Invite(ctx, request)
+//func (h *handler) Resolve(ctx *fasthttp.RequestCtx) {
+//	request, err := h.groupTransport.ResolveDecode(ctx)
+//	if err != nil {
+//		h.handleError(err, ctx)
+//		return
+//	}
+//
+//	response, err := h.groupService.ResolveGroup(request)
+//	if err != nil {
+//		h.handleError(err, ctx)
+//		return
+//	}
+//
+//	err = httputils.EncodeDefault(response, ctx)
+//	if err != nil {
+//		h.handleError(err, ctx)
+//		return
+//	}
+//}
+//func (h *handler) AddLink(ctx *fasthttp.RequestCtx) {
+//	request, err := h.groupTransport.AddLinkDecode(ctx)
+//	if err != nil {
+//		h.handleError(err, ctx)
+//		return
+//	}
+//	err = h.groupService.CheckPermission(models2.Group{ID: request.Group}, models2.ActionExpel)
+//	if err != nil {
+//		h.handleError(err, ctx)
+//		return
+//	}
+//	response, err := h.groupService.AddGroupInviteLink(request)
+//	if err != nil {
+//		h.handleError(err, ctx)
+//		return
+//	}
+//
+//	err = httputils.EncodeDefault(response, ctx)
+//	if err != nil {
+//		h.handleError(err, ctx)
+//		return
+//	}
+//}
+//func (h *handler) RemoveLink(ctx *fasthttp.RequestCtx) {
+//	request, err := h.groupTransport.RemoveLinkDecode(ctx)
+//	if err != nil {
+//		h.handleError(err, ctx)
+//		return
+//	}
+//
+//	err = h.groupService.CheckPermission(models2.Group{ID: request.Group}, models2.ActionExpel)
+//	if err != nil {
+//		h.handleError(err, ctx)
+//		return
+//	}
+//	response, err := h.groupService.RemoveGroupInviteLink(request)
+//	if err != nil {
+//		h.handleError(err, ctx)
+//		return
+//	}
+//
+//	err = httputils.EncodeDefault(response, ctx)
+//	if err != nil {
+//		h.handleError(err, ctx)
+//		return
+//	}
+//}
+//func (h *handler) ListLinks(ctx *fasthttp.RequestCtx) {
+//	request, err := h.groupTransport.ListLinkDecode(ctx)
+//	if err != nil {
+//		h.handleError(err, ctx)
+//		return
+//	}
+//
+//	err = h.groupService.CheckPermission(models2.Group{ID: request.Group}, models2.ActionExpel)
+//	if err != nil {
+//		h.handleError(err, ctx)
+//		return
+//	}
+//
+//	response, err := h.groupService.ListGroupInviteLink(request)
+//	if err != nil {
+//		h.handleError(err, ctx)
+//		return
+//	}
+//
+//	err = httputils.EncodeDefault(response, ctx)
+//	if err != nil {
+//		h.handleError(err, ctx)
+//		return
+//	}
+//}
+//
+func (h *handler) handleError(err error, ctx *fasthttp.RequestCtx) {
+	err = h.errorWorker.ServeJSONError(ctx, err)
 	if err != nil {
-		h.handleError(err, ctx)
-		return
-	}
-
-	err = httputils.EncodeDefault(response, ctx.RequestCtx)
-	if err != nil {
-		h.handleError(err, ctx)
-		return
-	}
-}
-
-func (h *handler) EditRole(ctx context.Context) {
-	request, err := h.groupTransport.ChangeRoleDecode(ctx.RequestCtx)
-	if err != nil {
-		h.handleError(err, ctx)
-		return
-	}
-
-	err = h.groupService.CheckPermission(ctx, models2.Group{ID: request.Group}, models2.ActionEditRole)
-	if err != nil {
-		h.handleError(err, ctx)
-		return
-	}
-	response, err := h.groupService.ChangeRole(ctx, request)
-	if err != nil {
-		h.handleError(err, ctx)
-		return
-	}
-
-	err = httputils.EncodeDefault(response, ctx.RequestCtx)
-	if err != nil {
-		h.handleError(err, ctx)
-	}
-}
-
-func (h *handler) Expel(ctx context.Context) {
-	request, err := h.groupTransport.ExpelDecode(ctx.RequestCtx)
-	if err != nil {
-		h.handleError(err, ctx)
-		return
-	}
-
-	err = h.groupService.CheckPermission(ctx, models2.Group{ID: request.Group}, models2.ActionExpel)
-	if err != nil {
-		h.handleError(err, ctx)
-		return
-	}
-
-	response, err := h.groupService.ExpelUser(ctx, request)
-	if err != nil {
-		h.handleError(err, ctx)
-		return
-	}
-
-	err = httputils.EncodeDefault(response, ctx.RequestCtx)
-	if err != nil {
-		h.handleError(err, ctx)
-		return
-	}
-}
-
-func (h *handler) Resolve(ctx context.Context) {
-	request, err := h.groupTransport.ResolveDecode(ctx.RequestCtx)
-	if err != nil {
-		h.handleError(err, ctx)
-		return
-	}
-
-	response, err := h.groupService.ResolveGroup(ctx, request)
-	if err != nil {
-		h.handleError(err, ctx)
-		return
-	}
-
-	err = httputils.EncodeDefault(response, ctx.RequestCtx)
-	if err != nil {
-		h.handleError(err, ctx)
-		return
-	}
-}
-func (h *handler) AddLink(ctx context.Context) {
-	request, err := h.groupTransport.AddLinkDecode(ctx.RequestCtx)
-	if err != nil {
-		h.handleError(err, ctx)
-		return
-	}
-	err = h.groupService.CheckPermission(ctx, models2.Group{ID: request.Group}, models2.ActionExpel)
-	if err != nil {
-		h.handleError(err, ctx)
-		return
-	}
-	response, err := h.groupService.AddGroupInviteLink(ctx, request)
-	if err != nil {
-		h.handleError(err, ctx)
-		return
-	}
-
-	err = httputils.EncodeDefault(response, ctx.RequestCtx)
-	if err != nil {
-		h.handleError(err, ctx)
-		return
-	}
-}
-func (h *handler) RemoveLink(ctx context.Context) {
-	request, err := h.groupTransport.RemoveLinkDecode(ctx.RequestCtx)
-	if err != nil {
-		h.handleError(err, ctx)
-		return
-	}
-
-	err = h.groupService.CheckPermission(ctx, models2.Group{ID: request.Group}, models2.ActionExpel)
-	if err != nil {
-		h.handleError(err, ctx)
-		return
-	}
-	response, err := h.groupService.RemoveGroupInviteLink(ctx, request)
-	if err != nil {
-		h.handleError(err, ctx)
-		return
-	}
-
-	err = httputils.EncodeDefault(response, ctx.RequestCtx)
-	if err != nil {
-		h.handleError(err, ctx)
-		return
-	}
-}
-func (h *handler) ListLinks(ctx context.Context) {
-	request, err := h.groupTransport.ListLinkDecode(ctx.RequestCtx)
-	if err != nil {
-		h.handleError(err, ctx)
-		return
-	}
-
-	err = h.groupService.CheckPermission(ctx, models2.Group{ID: request.Group}, models2.ActionExpel)
-	if err != nil {
-		h.handleError(err, ctx)
-		return
-	}
-
-	response, err := h.groupService.ListGroupInviteLink(ctx, request)
-	if err != nil {
-		h.handleError(err, ctx)
-		return
-	}
-
-	err = httputils.EncodeDefault(response, ctx.RequestCtx)
-	if err != nil {
-		h.handleError(err, ctx)
-		return
-	}
-}
-
-
-func (h *handler) handleError(err error, ctx context.Context) {
-	err = h.errorWorker.ServeJSONError(ctx.RequestCtx, err)
-	if err != nil {
-		h.errorWorker.ServeFatalError(ctx.RequestCtx)
+		h.errorWorker.ServeFatalError(ctx)
 	}
 	return
 }
