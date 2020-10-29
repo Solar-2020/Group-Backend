@@ -30,6 +30,9 @@ type Transport interface {
 	InternalGetListDecode(ctx *fasthttp.RequestCtx) (userID, groupID int, err error)
 	InternalGetListEncode(response []models2.GroupPreview, ctx *fasthttp.RequestCtx) (err error)
 
+	InternalGetPermissionDecode(ctx *fasthttp.RequestCtx) (userID, groupID int, err error)
+	InternalGetPermissionEncode(response models.UserRole, ctx *fasthttp.RequestCtx) (err error)
+
 	InviteDecode(ctx *fasthttp.RequestCtx) (request models.InviteUserRequest, err error)
 	ChangeRoleDecode(ctx *fasthttp.RequestCtx) (request models.ChangeRoleRequest, err error)
 	ExpelDecode(ctx *fasthttp.RequestCtx) (request models.ExpelUserRequest, err error)
@@ -211,6 +214,31 @@ func (t transport) InternalGetListDecode(ctx *fasthttp.RequestCtx) (userID, grou
 }
 
 func (t transport) InternalGetListEncode(response []models2.GroupPreview, ctx *fasthttp.RequestCtx) (err error) {
+	body, err := json.Marshal(response)
+	if err != nil {
+		return
+	}
+	ctx.Response.Header.SetContentType("application/json")
+	ctx.Response.Header.SetStatusCode(fasthttp.StatusOK)
+	ctx.SetBody(body)
+	return
+}
+
+func (t transport) InternalGetPermissionDecode(ctx *fasthttp.RequestCtx) (userID, groupID int, err error) {
+	_group := ctx.QueryArgs().Peek("group_id")
+	if _group != nil {
+		groupID, _ = strconv.Atoi(string(_group))
+	}
+
+	_userID := ctx.QueryArgs().Peek("user_id")
+	if _userID != nil {
+		userID, _ = strconv.Atoi(string(_userID))
+	}
+
+	return
+}
+
+func (t transport) InternalGetPermissionEncode(response models.UserRole, ctx *fasthttp.RequestCtx) (err error) {
 	body, err := json.Marshal(response)
 	if err != nil {
 		return

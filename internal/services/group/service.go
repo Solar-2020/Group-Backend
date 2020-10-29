@@ -31,6 +31,8 @@ type Service interface {
 	ListGroupInviteLink(request models.ListInviteLinkRequest) (response models.ListInviteLinkResponse, err error)
 
 	CheckPermission(group models2.Group, action models2.GroupAction, userID int) error
+
+	GetUserRole(groupID, userID int) (role models.UserRole, err error)
 }
 
 var (
@@ -278,6 +280,13 @@ func (s *service) ResolveGroup(request models.ResolveInviteLinkRequest) (respons
 	id, err := s.groupStorage.HashToGroupID(linkHash)
 	temp, err := s.groupStorage.SelectGroupByID(id)
 	response.Group = temp.ID
+	return
+}
+
+func (s *service) GetUserRole(groupID, userID int) (role models.UserRole, err error) {
+	role.GroupID = groupID
+	role.UserID = userID
+	role.RoleID, err = s.groupStorage.SelectGroupRole(groupID, userID)
 	return
 }
 

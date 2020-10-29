@@ -24,9 +24,9 @@ type ChangeRoleResponse struct {
 
 // DELETE /group/membership
 type ExpelUserRequest struct {
-	UserID int 	`json:"userId"`
-	Group int	`json:"group" validate:"required"`
-	User string		`json:"userEmail" validate:"required,email"`
+	UserID int    `json:"userId"`
+	Group  int    `json:"group" validate:"required"`
+	User   string `json:"userEmail" validate:"required,email"`
 }
 type ExpelUserResponse struct {
 	User string `json:"userEmail"`
@@ -34,11 +34,11 @@ type ExpelUserResponse struct {
 
 // PUT /group/invite
 type AddInviteLinkRequest struct {
-	Group int	`json:"group"`
+	Group int `json:"group"`
 }
 type AddInviteLinkResponse struct {
-	Group int	`json:"group"`
-	Link string `json:"link"`
+	Group int    `json:"group"`
+	Link  string `json:"link"`
 }
 
 // DELETE /group/invite
@@ -66,4 +66,11 @@ type ResolveInviteLinkRequest struct {
 }
 type ResolveInviteLinkResponse struct {
 	Group int `json:"group"`
+}
+
+type UserRole struct {
+	UserID   int    `json:"userID"`
+	GroupID  int    `json:"groupID"`
+	RoleID   int    `json:"roleID"`
+	RoleName string `json:"roleName"`
 }
