@@ -1,6 +1,8 @@
 package groupHandler
 
 import (
+	"errors"
+	httputils "github.com/Solar-2020/GoUtils/http"
 	"github.com/Solar-2020/Group-Backend/internal/services/group"
 	"github.com/valyala/fasthttp"
 )
@@ -13,7 +15,7 @@ type Handler interface {
 	GetList(ctx *fasthttp.RequestCtx)
 	InternalGetList(ctx *fasthttp.RequestCtx)
 	InternalGetPermission(ctx *fasthttp.RequestCtx)
-	//Invite(ctx *fasthttp.RequestCtx)
+	Invite(ctx *fasthttp.RequestCtx)
 	//EditRole(ctx *fasthttp.RequestCtx)
 	//Expel(ctx *fasthttp.RequestCtx)
 	//Resolve(ctx *fasthttp.RequestCtx)
@@ -198,31 +200,36 @@ func (h *handler) InternalGetPermission(ctx *fasthttp.RequestCtx) {
 //	}
 //}
 
-//func (h *handler) Invite(ctx *fasthttp.RequestCtx) {
-//	request, err := h.groupTransport.InviteDecode(ctx)
-//	if err != nil {
-//		h.handleError(err, ctx)
-//		return
-//	}
-//
-//	err = h.groupService.CheckPermission(models2.Group{ID: request.Group}, models2.ActionEditRole)
-//	if err != nil {
-//		h.handleError(err, ctx)
-//		return
-//	}
-//
-//	response, err := h.groupService.Invite(request)
-//	if err != nil {
-//		h.handleError(err, ctx)
-//		return
-//	}
-//
-//	err = httputils.EncodeDefault(response, ctx)
-//	if err != nil {
-//		h.handleError(err, ctx)
-//		return
-//	}
-//}
+func (h *handler) Invite(ctx *fasthttp.RequestCtx) {
+	request, err := h.groupTransport.InviteDecode(ctx)
+	if err != nil {
+		h.handleError(err, ctx)
+		return
+	}
+
+	role, err := h.groupService.GetUserRole(request.Group, request.CreatorID)
+	if err != nil {
+		h.handleError(err, ctx)
+		return
+	}
+
+	if !(role.RoleID == 1 || role.RoleID == 2) {
+		h.handleError(errors.New("access denied"), ctx)
+		return
+	}
+
+	response, err := h.groupService.Invite(request)
+	if err != nil {
+		h.handleError(err, ctx)
+		return
+	}
+
+	err = httputils.EncodeDefault(response, ctx)
+	if err != nil {
+		h.handleError(err, ctx)
+		return
+	}
+}
 
 //func (h *handler) EditRole(ctx *fasthttp.RequestCtx) {
 //	request, err := h.groupTransport.ChangeRoleDecode(ctx)

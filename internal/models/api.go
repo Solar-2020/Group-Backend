@@ -4,10 +4,11 @@ import "github.com/Solar-2020/Group-Backend/pkg/models"
 
 // PUT /group/membership
 type InviteUserRequest struct {
-	UserID []int             `json:"userId"`
-	Group  int               `json:"group" validate:"required"`
-	User   []string          `json:"userEmail"`
-	Role   models.MemberRole `json:"role"`
+	CreatorID int               `json:"-"`
+	UserID    []int             `json:"userId"`
+	Group     int               `json:"group" validate:"required"`
+	User      []string          `json:"userEmail"`
+	Role      models.MemberRole `json:"role"`
 }
 type InviteUserResponse InviteUserRequest
 

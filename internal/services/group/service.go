@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/Solar-2020/Group-Backend/internal"
+	"github.com/Solar-2020/Group-Backend/internal/clients/account"
 	"github.com/Solar-2020/Group-Backend/internal/models"
 	models2 "github.com/Solar-2020/Group-Backend/pkg/models"
 	"math/rand"
@@ -40,7 +41,8 @@ var (
 )
 
 type service struct {
-	groupStorage groupStorage
+	groupStorage  groupStorage
+	accountClient account.Client
 }
 
 func NewService(groupStorage groupStorage) Service {
@@ -170,7 +172,13 @@ func (s *service) InternalGetList(groupID, userID int) (response []models2.Group
 }
 
 func (s *service) Invite(request models.InviteUserRequest) (response models.InviteUserResponse, err error) {
-	// TODO: userEmail -> userID
+	for _, email := range request.User {
+		userID, err := s.accountClient.GetUserIDByEmail(email)
+		if err != nil {
+			return response, errors.New(err.Error() + fmt.Sprintf("cant add user %s", email))
+		}
+		request.UserID = append(request.UserID, userID)
+	}
 	addedUsers := make([]string, 0, len(request.UserID))
 	addedUsersID := make([]int, 0, len(request.UserID))
 	for i, userId := range request.UserID {
@@ -181,7 +189,6 @@ func (s *service) Invite(request models.InviteUserRequest) (response models.Invi
 			}
 			err = fmt.Errorf("%s; %s", err, fmt.Sprintf("[%d]: %s", i, err_))
 		} else {
-			addedUsers = append(addedUsers, request.User[i])
 			addedUsersID = append(addedUsersID, userId)
 		}
 	}

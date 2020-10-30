@@ -34,6 +34,7 @@ type Transport interface {
 	InternalGetPermissionEncode(response models.UserRole, ctx *fasthttp.RequestCtx) (err error)
 
 	InviteDecode(ctx *fasthttp.RequestCtx) (request models.InviteUserRequest, err error)
+
 	ChangeRoleDecode(ctx *fasthttp.RequestCtx) (request models.ChangeRoleRequest, err error)
 	ExpelDecode(ctx *fasthttp.RequestCtx) (request models.ExpelUserRequest, err error)
 
@@ -250,17 +251,25 @@ func (t transport) InternalGetPermissionEncode(response models.UserRole, ctx *fa
 }
 
 func (t transport) InviteDecode(ctx *fasthttp.RequestCtx) (request models.InviteUserRequest, err error) {
+	var ok bool
 	err = json.Unmarshal(ctx.Request.Body(), &request)
 	if err != nil {
 		return
 	}
+
 	if request.Group == 0 {
 		if urlId, err := http.GetUrlParamInt(ctx, "groupID"); err == nil {
 			request.Group = urlId
 		}
 	}
 	err = t.validator.Struct(request)
-	return
+
+	request.CreatorID, ok = ctx.UserValue("userID").(int)
+	if ok {
+		return
+	}
+
+	return request, errors.New("userID not found")
 }
 
 func (t transport) ChangeRoleDecode(ctx *fasthttp.RequestCtx) (request models.ChangeRoleRequest, err error) {
