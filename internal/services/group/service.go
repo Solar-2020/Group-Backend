@@ -182,7 +182,7 @@ func (s *service) Invite(request models.InviteUserRequest) (response models.Invi
 		return m
 	}()
 	for _, email := range request.User {
-		uid, err := s.accountClient.GetUserIDByEmail(email)
+		uid, err := s.emailToUid(email)
 		if err != nil {
 			return response, errors.New(err.Error() + fmt.Sprintf("cant add user %s", email))
 		}
@@ -192,7 +192,7 @@ func (s *service) Invite(request models.InviteUserRequest) (response models.Invi
 		}
 	}
 
-	addedUsers := make([]string, 0, len(request.UserID))
+	//addedUsers := make([]string, 0, len(request.UserID))
 	addedUsersID := make([]int, 0, len(request.UserID))
 
 	for i, userId := range request.UserID {
@@ -207,14 +207,14 @@ func (s *service) Invite(request models.InviteUserRequest) (response models.Invi
 		}
 	}
 	response = models.InviteUserResponse{
-		Group: request.Group, User: addedUsers, Role: request.Role, UserID: addedUsersID,
+		Group: request.Group, Role: request.Role, UserID: addedUsersID,
 	}
 	return
 }
 
 func (s *service) ChangeRole(request models.ChangeRoleRequest) (response models.ChangeRoleResponse, err error) {
 	if request.UserID == 0 {
-		request.UserID, err = s.accountClient.GetUserIDByEmail(request.User)
+		request.UserID, err = s.emailToUid(request.User)
 		if err != nil {
 			err = fmt.Errorf("bad user: %s", err)
 			return
@@ -227,7 +227,7 @@ func (s *service) ChangeRole(request models.ChangeRoleRequest) (response models.
 
 func (s *service) ExpelUser(request models.ExpelUserRequest) (response models.ExpelUserResponse, err error) {
 	if request.UserID == 0 {
-		request.UserID, err = s.accountClient.GetUserIDByEmail(request.User)
+		request.UserID, err = s.emailToUid(request.User)
 		if err != nil {
 			err = fmt.Errorf("bad user: %s", err)
 			return
@@ -334,4 +334,17 @@ func (s *service) getHashFromLink(src string) (res string, err error) {
 
 func (s *service) getLinkFromHash(src string) string {
 	return fmt.Sprintf("%s/%s", internal.Config.InviteLinkPrefix, src)
+}
+
+func (s *service) emailToUid(email string) (uid int, err error) {
+   client := accountApi.AccountClient{
+		   Addr:    internal.Config.AccountServiceAddress,
+   }
+   user, err := client.GetUserByEmail(email)
+   if err != nil {
+		   err = fmt.Errorf("bad user: %s", err)
+		   return
+   }
+   uid = user.ID
+   return
 }
