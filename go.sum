@@ -1,12 +1,11 @@
 cloud.google.com/go v0.26.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/Solar-2020/Account-Backend v0.0.0-20201023232629-e612662ee390/go.mod h1:uv23VdpVHIN1t/kk6sITkPASU67cLSO9XXEL4EitDyY=
-github.com/Solar-2020/Account-Backend v1.0.0/go.mod h1:dND8IFE9HL1bujKcRrINM0TD0CiuOni5yXV99Yb1ZBc=
 github.com/Solar-2020/Account-Backend v1.0.1 h1:M9R+CwOTdxskaiks+g6axquIOBj1X+agrbgt8kKkPnQ=
 github.com/Solar-2020/Account-Backend v1.0.1/go.mod h1:9CsLeMjhKBIgEyFHG1U62Qo2HKzudmZ12e2Mh3Sr/EI=
 github.com/Solar-2020/Authorization-Backend v1.0.0/go.mod h1:AAajUafxec6xymGXXkf/bofjxiL+GSrNqywK44YBEGE=
-github.com/Solar-2020/Authorization-Backend v1.0.1 h1:PylmqJPFlzZBAXCQQcx6VFmL8furXL1G8KMu54BUcqg=
-github.com/Solar-2020/Authorization-Backend v1.0.1/go.mod h1:B7jDIQlXDJiD6hx4GB5vlyvI4rwRnqtJOyZvu5MfD2g=
+github.com/Solar-2020/Authorization-Backend v1.0.1-0.20201030135138-435f31ab46e5 h1:HTLu/DdniJKm1spZQ72fiMZx8fC/EAVWir/nAA4eZJg=
+github.com/Solar-2020/Authorization-Backend v1.0.1-0.20201030135138-435f31ab46e5/go.mod h1:xHQlnjw7HkHXsvzz/rnEcsiR03GfHDzS8yr4KIBW4B0=
 github.com/Solar-2020/GoUtils v0.0.0-20201028130128-34e4f0f5a23d/go.mod h1:JgUyQ2m5+AxfNqe6/llRQGOxCeisBqBn/sp3Wt/elhU=
 github.com/Solar-2020/GoUtils v1.0.1 h1:BPjFb1YeXWWK80Bv7InPR1WKde8rvcQ2DmK0wKHQh+g=
 github.com/Solar-2020/GoUtils v1.0.1/go.mod h1:JgUyQ2m5+AxfNqe6/llRQGOxCeisBqBn/sp3Wt/elhU=
