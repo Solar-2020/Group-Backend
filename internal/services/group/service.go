@@ -3,6 +3,7 @@ package group
 import (
 	"errors"
 	"fmt"
+	accountApi "github.com/Solar-2020/Account-Backend/pkg/api"
 	"github.com/Solar-2020/Group-Backend/internal"
 	"github.com/Solar-2020/Group-Backend/internal/models"
 	models2 "github.com/Solar-2020/Group-Backend/pkg/models"
@@ -170,9 +171,28 @@ func (s *service) InternalGetList(groupID, userID int) (response []models2.Group
 }
 
 func (s *service) Invite(request models.InviteUserRequest) (response models.InviteUserResponse, err error) {
-	// TODO: userEmail -> userID
+	// Можно передавать смешанные списки по UserID и Email. Собираем единый.
+	userIds := func() map[int]bool {
+		m := make(map[int]bool)
+		for _, id := range request.UserID {
+			m[id] = true
+		}
+		return m
+	}()
+	for _, email := range request.User {
+		uid, err := s.emailToUid(email)
+		if err != nil {
+			continue
+		}
+		if _, ok := userIds[uid]; !ok {
+			request.UserID = append(request.UserID, uid)
+			userIds[uid] = true
+		}
+	}
+
 	addedUsers := make([]string, 0, len(request.UserID))
 	addedUsersID := make([]int, 0, len(request.UserID))
+
 	for i, userId := range request.UserID {
 		err_ := s.groupStorage.InsertUser(request.Group, userId, int(request.Role))
 		if err_ != nil {
@@ -192,17 +212,27 @@ func (s *service) Invite(request models.InviteUserRequest) (response models.Invi
 }
 
 func (s *service) ChangeRole(request models.ChangeRoleRequest) (response models.ChangeRoleResponse, err error) {
-	// TODO: userEmail -> userID
-	userID := request.UserID
-	newRole, err := s.groupStorage.EditUserRole(request.Group, userID, int(request.Role))
+	if request.UserID == 0 {
+		request.UserID, err = s.emailToUid(request.User)
+		if err != nil {
+			err = fmt.Errorf("bad user: %s", err)
+			return
+		}
+	}
+	newRole, err := s.groupStorage.EditUserRole(request.Group, request.UserID, int(request.Role))
 	response.Role = models2.MemberRole(newRole)
 	return
 }
 
 func (s *service) ExpelUser(request models.ExpelUserRequest) (response models.ExpelUserResponse, err error) {
-	// TODO: userEmail -> userID
-	userID := request.UserID
-	err = s.groupStorage.RemoveUser(int(request.Group), userID)
+	if request.UserID == 0 {
+		request.UserID, err = s.emailToUid(request.User)
+		if err != nil {
+			err = fmt.Errorf("bad user: %s", err)
+			return
+		}
+	}
+	err = s.groupStorage.RemoveUser(int(request.Group), request.UserID)
 	response.User = request.User
 	return
 }
@@ -303,4 +333,17 @@ func (s *service) getHashFromLink(src string) (res string, err error) {
 
 func (s *service) getLinkFromHash(src string) string {
 	return fmt.Sprintf("%s/%s", internal.Config.InviteLinkPrefix, src)
+}
+
+func (s *service) emailToUid(email string) (uid int, err error) {
+	client := accountApi.AccountClient{
+		Addr:    internal.Config.AccountServiceAddress,
+	}
+	user, err := client.GetUserByEmail(email)
+	if err != nil {
+		err = fmt.Errorf("bad user: %s", err)
+		return
+	}
+	uid = user.ID
+	return
 }

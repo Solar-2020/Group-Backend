@@ -99,11 +99,18 @@ func (t transport) UpdateDecode(ctx *fasthttp.RequestCtx) (request models2.Group
 		return
 	}
 
+	groupIDStr := ctx.UserValue("groupID").(string)
+	group.ID, err = strconv.Atoi(groupIDStr)
+	if err != nil {
+		return
+	}
+
 	userID, ok = ctx.UserValue("userID").(int)
 	if ok {
 		request = group
 		return
 	}
+
 
 	return request, userID, errors.New("userID not found")
 }

@@ -1,6 +1,7 @@
 package groupHandler
 
 import (
+	httputils "github.com/Solar-2020/GoUtils/http"
 	"github.com/Solar-2020/Group-Backend/internal/services/group"
 	"github.com/valyala/fasthttp"
 )
@@ -13,9 +14,9 @@ type Handler interface {
 	GetList(ctx *fasthttp.RequestCtx)
 	InternalGetList(ctx *fasthttp.RequestCtx)
 	InternalGetPermission(ctx *fasthttp.RequestCtx)
-	//Invite(ctx *fasthttp.RequestCtx)
-	//EditRole(ctx *fasthttp.RequestCtx)
-	//Expel(ctx *fasthttp.RequestCtx)
+	Invite(ctx *fasthttp.RequestCtx)
+	EditRole(ctx *fasthttp.RequestCtx)
+	Expel(ctx *fasthttp.RequestCtx)
 	//Resolve(ctx *fasthttp.RequestCtx)
 	//AddLink(ctx *fasthttp.RequestCtx)
 	//RemoveLink(ctx *fasthttp.RequestCtx)
@@ -198,81 +199,81 @@ func (h *handler) InternalGetPermission(ctx *fasthttp.RequestCtx) {
 //	}
 //}
 
-//func (h *handler) Invite(ctx *fasthttp.RequestCtx) {
-//	request, err := h.groupTransport.InviteDecode(ctx)
-//	if err != nil {
-//		h.handleError(err, ctx)
-//		return
-//	}
-//
-//	err = h.groupService.CheckPermission(models2.Group{ID: request.Group}, models2.ActionEditRole)
-//	if err != nil {
-//		h.handleError(err, ctx)
-//		return
-//	}
-//
-//	response, err := h.groupService.Invite(request)
-//	if err != nil {
-//		h.handleError(err, ctx)
-//		return
-//	}
-//
-//	err = httputils.EncodeDefault(response, ctx)
-//	if err != nil {
-//		h.handleError(err, ctx)
-//		return
-//	}
-//}
+func (h *handler) Invite(ctx *fasthttp.RequestCtx) {
+	request, err := h.groupTransport.InviteDecode(ctx)
+	if err != nil {
+		h.handleError(err, ctx)
+		return
+	}
 
-//func (h *handler) EditRole(ctx *fasthttp.RequestCtx) {
-//	request, err := h.groupTransport.ChangeRoleDecode(ctx)
-//	if err != nil {
-//		h.handleError(err, ctx)
-//		return
-//	}
-//
-//	err = h.groupService.CheckPermission(models2.Group{ID: request.Group}, models2.ActionEditRole)
-//	if err != nil {
-//		h.handleError(err, ctx)
-//		return
-//	}
-//	response, err := h.groupService.ChangeRole(request)
-//	if err != nil {
-//		h.handleError(err, ctx)
-//		return
-//	}
-//
-//	err = httputils.EncodeDefault(response, ctx)
-//	if err != nil {
-//		h.handleError(err, ctx)
-//	}
-//}
-//
-//func (h *handler) Expel(ctx *fasthttp.RequestCtx) {
-//	request, err := h.groupTransport.ExpelDecode(ctx)
-//	if err != nil {
-//		h.handleError(err, ctx)
-//		return
-//	}
-//
-//	err = h.groupService.CheckPermission(models2.Group{ID: request.Group}, models2.ActionExpel)
-//	if err != nil {
-//		h.handleError(err, ctx)
-//		return
-//	}
-//
-//	response, err := h.groupService.ExpelUser(request)
-//	if err != nil {
-//		h.handleError(err, ctx)
-//		return
-//	}
-//
-//	err = httputils.EncodeDefault(response, ctx)
-//	if err != nil {
-//		h.handleError(err, ctx)
-//		return
-//	}
-//}
+	//err = h.groupService.CheckPermission(models2.Group{ID: request.Group}, models2.ActionEditRole)
+	//if err != nil {
+	//	h.handleError(err, ctx)
+	//	return
+	//}
+
+	response, err := h.groupService.Invite(request)
+	if err != nil {
+		h.handleError(err, ctx)
+		return
+	}
+
+	err = httputils.EncodeDefault(response, ctx)
+	if err != nil {
+		h.handleError(err, ctx)
+		return
+	}
+}
+
+func (h *handler) EditRole(ctx *fasthttp.RequestCtx) {
+	request, err := h.groupTransport.ChangeRoleDecode(ctx)
+	if err != nil {
+		h.handleError(err, ctx)
+		return
+	}
+
+	//err = h.groupService.CheckPermission(models2.Group{ID: request.Group}, models2.ActionEditRole)
+	//if err != nil {
+	//	h.handleError(err, ctx)
+	//	return
+	//}
+	response, err := h.groupService.ChangeRole(request)
+	if err != nil {
+		h.handleError(err, ctx)
+		return
+	}
+
+	err = httputils.EncodeDefault(response, ctx)
+	if err != nil {
+		h.handleError(err, ctx)
+	}
+}
+
+func (h *handler) Expel(ctx *fasthttp.RequestCtx) {
+	request, err := h.groupTransport.ExpelDecode(ctx)
+	if err != nil {
+		h.handleError(err, ctx)
+		return
+	}
+
+	//err = h.groupService.CheckPermission(models2.Group{ID: request.Group}, models2.ActionExpel)
+	//if err != nil {
+	//	h.handleError(err, ctx)
+	//	return
+	//}
+
+	response, err := h.groupService.ExpelUser(request)
+	if err != nil {
+		h.handleError(err, ctx)
+		return
+	}
+
+	err = httputils.EncodeDefault(response, ctx)
+	if err != nil {
+		h.handleError(err, ctx)
+		return
+	}
+}
 
 //func (h *handler) Resolve(ctx *fasthttp.RequestCtx) {
 //	request, err := h.groupTransport.ResolveDecode(ctx)
@@ -299,11 +300,11 @@ func (h *handler) InternalGetPermission(ctx *fasthttp.RequestCtx) {
 //		h.handleError(err, ctx)
 //		return
 //	}
-//	err = h.groupService.CheckPermission(models2.Group{ID: request.Group}, models2.ActionExpel)
-//	if err != nil {
-//		h.handleError(err, ctx)
-//		return
-//	}
+//	//err = h.groupService.CheckPermission(models2.Group{ID: request.Group}, models2.ActionExpel)
+//	//if err != nil {
+//	//	h.handleError(err, ctx)
+//	//	return
+//	//}
 //	response, err := h.groupService.AddGroupInviteLink(request)
 //	if err != nil {
 //		h.handleError(err, ctx)
@@ -323,11 +324,11 @@ func (h *handler) InternalGetPermission(ctx *fasthttp.RequestCtx) {
 //		return
 //	}
 //
-//	err = h.groupService.CheckPermission(models2.Group{ID: request.Group}, models2.ActionExpel)
-//	if err != nil {
-//		h.handleError(err, ctx)
-//		return
-//	}
+//	//err = h.groupService.CheckPermission(models2.Group{ID: request.Group}, models2.ActionExpel)
+//	//if err != nil {
+//	//	h.handleError(err, ctx)
+//	//	return
+//	//}
 //	response, err := h.groupService.RemoveGroupInviteLink(request)
 //	if err != nil {
 //		h.handleError(err, ctx)
@@ -347,11 +348,11 @@ func (h *handler) InternalGetPermission(ctx *fasthttp.RequestCtx) {
 //		return
 //	}
 //
-//	err = h.groupService.CheckPermission(models2.Group{ID: request.Group}, models2.ActionExpel)
-//	if err != nil {
-//		h.handleError(err, ctx)
-//		return
-//	}
+//	//err = h.groupService.CheckPermission(models2.Group{ID: request.Group}, models2.ActionExpel)
+//	//if err != nil {
+//	//	h.handleError(err, ctx)
+//	//	return
+//	//}
 //
 //	response, err := h.groupService.ListGroupInviteLink(request)
 //	if err != nil {
@@ -365,7 +366,7 @@ func (h *handler) InternalGetPermission(ctx *fasthttp.RequestCtx) {
 //		return
 //	}
 //}
-//
+
 func (h *handler) handleError(err error, ctx *fasthttp.RequestCtx) {
 	err = h.errorWorker.ServeJSONError(ctx, err)
 	if err != nil {

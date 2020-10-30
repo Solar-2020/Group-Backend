@@ -26,7 +26,7 @@ type ChangeRoleResponse struct {
 type ExpelUserRequest struct {
 	UserID int    `json:"userId"`
 	Group  int    `json:"group" validate:"required"`
-	User   string `json:"userEmail" validate:"required,email"`
+	User   string `json:"userEmail" validate:"email"`
 }
 type ExpelUserResponse struct {
 	User string `json:"userEmail"`
