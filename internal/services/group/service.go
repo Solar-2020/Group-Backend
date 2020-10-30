@@ -5,6 +5,7 @@ import (
 	"fmt"
 	accountApi "github.com/Solar-2020/Account-Backend/pkg/api"
 	"github.com/Solar-2020/Group-Backend/internal"
+	"github.com/Solar-2020/Group-Backend/internal/clients/account"
 	"github.com/Solar-2020/Group-Backend/internal/models"
 	models2 "github.com/Solar-2020/Group-Backend/pkg/models"
 	"math/rand"
@@ -41,7 +42,8 @@ var (
 )
 
 type service struct {
-	groupStorage groupStorage
+	groupStorage  groupStorage
+	accountClient account.Client
 }
 
 func NewService(groupStorage groupStorage) Service {
@@ -180,9 +182,9 @@ func (s *service) Invite(request models.InviteUserRequest) (response models.Invi
 		return m
 	}()
 	for _, email := range request.User {
-		uid, err := s.emailToUid(email)
+		uid, err := s.accountClient.GetUserIDByEmail(email)
 		if err != nil {
-			continue
+			return response, errors.New(err.Error() + fmt.Sprintf("cant add user %s", email))
 		}
 		if _, ok := userIds[uid]; !ok {
 			request.UserID = append(request.UserID, uid)
@@ -201,7 +203,6 @@ func (s *service) Invite(request models.InviteUserRequest) (response models.Invi
 			}
 			err = fmt.Errorf("%s; %s", err, fmt.Sprintf("[%d]: %s", i, err_))
 		} else {
-			addedUsers = append(addedUsers, request.User[i])
 			addedUsersID = append(addedUsersID, userId)
 		}
 	}
@@ -213,7 +214,7 @@ func (s *service) Invite(request models.InviteUserRequest) (response models.Invi
 
 func (s *service) ChangeRole(request models.ChangeRoleRequest) (response models.ChangeRoleResponse, err error) {
 	if request.UserID == 0 {
-		request.UserID, err = s.emailToUid(request.User)
+		request.UserID, err = s.accountClient.GetUserIDByEmail(request.User)
 		if err != nil {
 			err = fmt.Errorf("bad user: %s", err)
 			return
@@ -226,7 +227,7 @@ func (s *service) ChangeRole(request models.ChangeRoleRequest) (response models.
 
 func (s *service) ExpelUser(request models.ExpelUserRequest) (response models.ExpelUserResponse, err error) {
 	if request.UserID == 0 {
-		request.UserID, err = s.emailToUid(request.User)
+		request.UserID, err = s.accountClient.GetUserIDByEmail(request.User)
 		if err != nil {
 			err = fmt.Errorf("bad user: %s", err)
 			return
@@ -333,17 +334,4 @@ func (s *service) getHashFromLink(src string) (res string, err error) {
 
 func (s *service) getLinkFromHash(src string) string {
 	return fmt.Sprintf("%s/%s", internal.Config.InviteLinkPrefix, src)
-}
-
-func (s *service) emailToUid(email string) (uid int, err error) {
-	client := accountApi.AccountClient{
-		Addr:    internal.Config.AccountServiceAddress,
-	}
-	user, err := client.GetUserByEmail(email)
-	if err != nil {
-		err = fmt.Errorf("bad user: %s", err)
-		return
-	}
-	uid = user.ID
-	return
 }
