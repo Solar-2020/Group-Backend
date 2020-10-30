@@ -9,6 +9,7 @@ import (
 	"github.com/Solar-2020/Group-Backend/cmd/handlers"
 	groupHandler "github.com/Solar-2020/Group-Backend/cmd/handlers/group"
 	"github.com/Solar-2020/Group-Backend/internal"
+	"github.com/Solar-2020/Group-Backend/internal/clients/account"
 	"github.com/Solar-2020/Group-Backend/internal/clients/auth"
 	"github.com/Solar-2020/Group-Backend/internal/services/group"
 	"github.com/Solar-2020/Group-Backend/internal/storages/groupStorage"
@@ -42,7 +43,8 @@ func main() {
 	errorWorker := errorWorker.NewErrorWorker()
 
 	groupStorage := groupStorage.NewStorage(groupDB)
-	groupService := group.NewService(groupStorage)
+	accountClient := account.NewClient(internal.Config.AccountServiceAddress, internal.Config.ServerSecret)
+	groupService := group.NewService(groupStorage, accountClient)
 	groupTransport := group.NewTransport()
 
 	authService := authapi.AuthClient{
