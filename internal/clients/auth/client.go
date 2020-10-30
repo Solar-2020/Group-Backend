@@ -66,7 +66,7 @@ func (c *client) GetUserIDByCookie(sessionToken string) (userID int, err error) 
 		if err != nil {
 			return
 		}
-		return userID, err
+		return userID, errors.New(httpErr.Error)
 	default:
 		return userID, errors.New("Unexpected Server Error")
 	}
