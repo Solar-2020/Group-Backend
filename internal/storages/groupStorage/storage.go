@@ -100,8 +100,9 @@ func (s *storage) SelectGroupRole(groupID, userID int) (role models2.UserRole, e
 	role.UserID = userID
 	role.GroupID = groupID
 	const sqlQuery = `
-	SELECT ug.role_id
+	SELECT ug.role_id, r.title
 	FROM users_groups as ug
+			 JOIN roles AS r ON ug.role_id = r.id
 	WHERE ug.group_id = $1 AND ug.user_id = $2;`
 
 	err = s.db.QueryRow(sqlQuery, groupID, userID).Scan(&role.RoleID, &role.RoleName)
