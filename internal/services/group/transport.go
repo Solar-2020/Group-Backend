@@ -350,10 +350,13 @@ func (t transport) ListLinkDecode(ctx *fasthttp.RequestCtx) (request models.List
 
 func (t transport) GetMembershipListDecode(ctx *fasthttp.RequestCtx) (userID, groupID int, err error) {
 	var ok bool
-	if groupID, err = http.GetUrlParamInt(ctx, "groupID"); err == nil {
-		return userID, groupID, err
+	if groupID == 0 {
+		if urlId, err := http.GetUrlParamInt(ctx, "groupID"); err == nil {
+			groupID= urlId
+		}
 	}
-
+	//userID = 12
+	//return
 	userID, ok = ctx.UserValue("userID").(int)
 	if ok {
 		return

@@ -338,16 +338,16 @@ func (s *service) GetMembershipList(groupID, userID int) (memberships []models2.
 	//TODO REWORK TO ARRAY REQUEST
 	for i, _ := range usersRoles {
 		var tempUser models3.User
-		tempUser, err = s.accountClient.GetUserByID(memberships[i].UserID)
+		tempUser, err = s.accountClient.GetUserByID(usersRoles[i].UserID)
 		if err != nil {
 			return
 		}
 
 		tempMembership := models2.Membership{
-			UserID:    memberships[i].UserID,
-			GroupID:   memberships[i].GroupID,
-			RoleID:    memberships[i].RoleID,
-			RoleName:  memberships[i].RoleName,
+			UserID:    usersRoles[i].UserID,
+			GroupID:   usersRoles[i].GroupID,
+			RoleID:    usersRoles[i].RoleID,
+			RoleName:  usersRoles[i].RoleName,
 			Email:     tempUser.Email,
 			Name:      tempUser.Name,
 			Surname:   tempUser.Surname,

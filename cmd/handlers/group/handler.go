@@ -289,7 +289,7 @@ func (h *handler) GetMembershipList(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	response, err := h.groupService.GetMembershipList(userID, groupID)
+	response, err := h.groupService.GetMembershipList(groupID, userID)
 	if err != nil {
 		h.handleError(err, ctx)
 		return

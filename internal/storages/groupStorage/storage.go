@@ -127,7 +127,7 @@ func (s *storage) SelectUsersByGroupID(groupID int) (users []models2.UserRole, e
 	for rows.Next() {
 		var tempUser models2.UserRole
 		tempUser.GroupID = groupID
-		err = rows.Scan(&tempUser.UserID, tempUser.RoleID, tempUser.RoleName)
+		err = rows.Scan(&tempUser.UserID, &tempUser.RoleID, &tempUser.RoleName)
 		if err != nil {
 			return
 		}
