@@ -33,7 +33,7 @@ type Service interface {
 
 	CheckPermission(group models2.Group, action models2.GroupAction, userID int) error
 
-	GetUserRole(groupID, userID int) (role models.UserRole, err error)
+	GetUserRole(groupID, userID int) (role models2.UserRole, err error)
 }
 
 var (
@@ -47,7 +47,7 @@ type service struct {
 
 func NewService(groupStorage groupStorage, ac account.Client) Service {
 	return &service{
-		groupStorage: groupStorage,
+		groupStorage:  groupStorage,
 		accountClient: ac,
 	}
 }
@@ -94,12 +94,12 @@ func (s *service) checkUnique(group models2.Group) (err error) {
 }
 
 func (s *service) checkAdminPermission(groupID, userID int) (err error) {
-	roleID, err := s.groupStorage.SelectGroupRole(groupID, userID)
+	role, err := s.groupStorage.SelectGroupRole(groupID, userID)
 	if err != nil {
 		return errors.New("У Вас недостаточно прав для совершения данной операции")
 	}
 
-	if !(roleID == 1 || roleID == 2) {
+	if !(role.RoleID == 1 || role.RoleID == 2) {
 		return errors.New("У Вас недостаточно прав для совершения данной операции")
 	}
 
@@ -107,12 +107,12 @@ func (s *service) checkAdminPermission(groupID, userID int) (err error) {
 }
 
 func (s *service) checkUserPermission(groupID, userID int) (err error) {
-	roleID, err := s.groupStorage.SelectGroupRole(groupID, userID)
+	role, err := s.groupStorage.SelectGroupRole(groupID, userID)
 	if err != nil {
 		return errors.New("У Вас недостаточно прав для совершения данной операции")
 	}
 
-	if !(roleID == 1 || roleID == 2 || roleID == 3) {
+	if !(role.RoleID == 1 || role.RoleID == 2 || role.RoleID == 3) {
 		return errors.New("У Вас недостаточно прав для совершения данной операции")
 	}
 
@@ -158,7 +158,10 @@ func (s *service) Get(groupID, userID int) (response models2.Group, err error) {
 	}
 
 	response, err = s.groupStorage.SelectGroupByID(groupID)
-
+	if err != nil {
+		return
+	}
+	response.UserRole, err = s.groupStorage.SelectGroupRole(groupID, userID)
 	return
 }
 
@@ -314,10 +317,9 @@ func (s *service) ResolveGroup(request models.ResolveInviteLinkRequest) (respons
 	return
 }
 
-func (s *service) GetUserRole(groupID, userID int) (role models.UserRole, err error) {
-	role.GroupID = groupID
-	role.UserID = userID
-	role.RoleID, err = s.groupStorage.SelectGroupRole(groupID, userID)
+func (s *service) GetUserRole(groupID, userID int) (role models2.UserRole, err error) {
+	role, err = s.groupStorage.SelectGroupRole(groupID, userID)
+
 	return
 }
 

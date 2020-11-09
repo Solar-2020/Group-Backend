@@ -69,9 +69,3 @@ type ResolveInviteLinkResponse struct {
 	Group int `json:"group"`
 }
 
-type UserRole struct {
-	UserID   int    `json:"userID"`
-	GroupID  int    `json:"groupID"`
-	RoleID   int    `json:"roleID"`
-	RoleName string `json:"roleName"`
-}

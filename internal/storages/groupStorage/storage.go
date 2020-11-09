@@ -8,9 +8,9 @@ import (
 )
 
 const (
-	queryReturningID = "RETURNING id;"
-	userGroupsTable = "users_groups"
-	groupLinksTable = "group_links"
+	queryReturningID        = "RETURNING id;"
+	userGroupsTable         = "users_groups"
+	groupLinksTable         = "group_links"
 	pgErrorUniqueConstraint = "23505"
 )
 
@@ -19,14 +19,14 @@ type Storage interface {
 	UpdateGroup(group models2.Group) (groupReturn models2.Group, err error)
 	UpdateGroupStatus(groupID, statusID int) (group models2.Group, err error)
 	SelectGroupByID(groupID int) (group models2.Group, err error)
-	SelectGroupRole(groupID, userID int) (roleID int, err error)
+	SelectGroupRole(groupID, userID int) (role models2.UserRole, err error)
 	SelectGroupsByUserID(userID int, groupID int) (group []models2.GroupPreview, err error)
 
 	InsertUser(groupID, userID, roleID int) (err error)
 	EditUserRole(groupID, userID, roleID int) (resultRole int, err error)
 	RemoveUser(groupID, userID int) (err error)
 
-	HashToGroupID(line string) (groupID  int, err error)
+	HashToGroupID(line string) (groupID int, err error)
 	RemoveLinkToGroup(groupID int, link string) (err error)
 	ListShortLinksToGroup(groupID int) (res []models2.GroupInviteLink, err error)
 	AddShortLinkToGroup(groupID int, link string, author int) (err error)
@@ -96,13 +96,15 @@ func (s *storage) SelectGroupByID(groupID int) (group models2.Group, err error) 
 	return
 }
 
-func (s *storage) SelectGroupRole(groupID, userID int) (roleID int, err error) {
+func (s *storage) SelectGroupRole(groupID, userID int) (role models2.UserRole, err error) {
+	role.UserID = userID
+	role.GroupID = groupID
 	const sqlQuery = `
 	SELECT ug.role_id
 	FROM users_groups as ug
 	WHERE ug.group_id = $1 AND ug.user_id = $2;`
 
-	err = s.db.QueryRow(sqlQuery, groupID, userID).Scan(&roleID)
+	err = s.db.QueryRow(sqlQuery, groupID, userID).Scan(&role.RoleID, &role.RoleName)
 	return
 }
 
@@ -151,7 +153,6 @@ func (s *storage) RemoveUser(groupID, userID int) (err error) {
 	return
 }
 
-
 func (s *storage) SelectGroupsByUserID(userID int, groupID int) (groups []models2.GroupPreview, err error) {
 	const sqlQuery = `
 	SELECT g.id,
@@ -195,7 +196,7 @@ func (s *storage) SelectGroupsByUserID(userID int, groupID int) (groups []models
 	return
 }
 
-func (s *storage) HashToGroupID(line string) (groupID  int, err error) {
+func (s *storage) HashToGroupID(line string) (groupID int, err error) {
 	const sqlTemplate = `SELECT group_id from %s WHERE link=$1`
 	query := fmt.Sprintf(sqlTemplate, groupLinksTable)
 
@@ -235,7 +236,7 @@ func (s *storage) ListShortLinksToGroup(groupID int) (res []models2.GroupInviteL
 		return
 	}
 
-	for rows.Next(){
+	for rows.Next() {
 		link := models2.GroupInviteLink{}
 		err = rows.Scan(&link.Link, &link.Added, &link.Author)
 		if err != nil {

@@ -31,7 +31,7 @@ type Transport interface {
 	InternalGetListEncode(response []models2.GroupPreview, ctx *fasthttp.RequestCtx) (err error)
 
 	InternalGetPermissionDecode(ctx *fasthttp.RequestCtx) (userID, groupID int, err error)
-	InternalGetPermissionEncode(response models.UserRole, ctx *fasthttp.RequestCtx) (err error)
+	InternalGetPermissionEncode(response models2.UserRole, ctx *fasthttp.RequestCtx) (err error)
 
 	InviteDecode(ctx *fasthttp.RequestCtx) (request models.InviteUserRequest, err error)
 
@@ -246,7 +246,7 @@ func (t transport) InternalGetPermissionDecode(ctx *fasthttp.RequestCtx) (userID
 	return
 }
 
-func (t transport) InternalGetPermissionEncode(response models.UserRole, ctx *fasthttp.RequestCtx) (err error) {
+func (t transport) InternalGetPermissionEncode(response models2.UserRole, ctx *fasthttp.RequestCtx) (err error) {
 	body, err := json.Marshal(response)
 	if err != nil {
 		return

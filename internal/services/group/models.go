@@ -9,7 +9,7 @@ type groupStorage interface {
 	UpdateGroup(group models2.Group) (groupReturn models2.Group, err error)
 	UpdateGroupStatus(groupID, statusID int) (group models2.Group, err error)
 	SelectGroupByID(groupID int) (group models2.Group, err error)
-	SelectGroupRole(groupID, userID int) (roleID int, err error)
+	SelectGroupRole(groupID, userID int) (role models2.UserRole, err error)
 	SelectGroupsByUserID(userID int, groupID int) (group []models2.GroupPreview, err error)
 
 	InsertUser(groupID, userID, roleID int) (err error)

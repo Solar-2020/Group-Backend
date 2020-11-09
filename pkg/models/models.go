@@ -25,15 +25,23 @@ const (
 )
 
 type Group struct {
-	ID          int       `json:"id"`
-	Title       string    `json:"title" validate:"required"`
-	Description string    `json:"description"`
-	URL         string    `json:"URL" validate:"required"`
-	CreateBy    int       `json:"createBy"`
-	CreatAt     time.Time `json:"creatAt"`
-	AvatarURL   string    `json:"avatarURL"`
-	StatusID    int       `json:"-"`
-	Count       int       `json:"count"`
+	ID          int             `json:"id"`
+	Title       string          `json:"title" validate:"required"`
+	Description string          `json:"description"`
+	URL         string          `json:"URL" validate:"required"`
+	CreateBy    int             `json:"createBy"`
+	CreatAt     time.Time       `json:"creatAt"`
+	AvatarURL   string          `json:"avatarURL"`
+	StatusID    int             `json:"-"`
+	Count       int             `json:"count"`
+	UserRole    UserRole `json:"userRole"`
+}
+
+type UserRole struct {
+	UserID   int    `json:"userID"`
+	GroupID  int    `json:"groupID"`
+	RoleID   int    `json:"roleID"`
+	RoleName string `json:"roleName"`
 }
 
 type GroupPreview struct {
