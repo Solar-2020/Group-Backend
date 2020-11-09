@@ -22,6 +22,7 @@ type Storage interface {
 	SelectGroupRole(groupID, userID int) (role models2.UserRole, err error)
 	SelectGroupsByUserID(userID int, groupID int) (group []models2.GroupPreview, err error)
 
+	SelectUsersByGroupID(groupID int) (users []models2.UserRole, err error)
 	InsertUser(groupID, userID, roleID int) (err error)
 	EditUserRole(groupID, userID, roleID int) (resultRole int, err error)
 	RemoveUser(groupID, userID int) (err error)
@@ -106,6 +107,33 @@ func (s *storage) SelectGroupRole(groupID, userID int) (role models2.UserRole, e
 	WHERE ug.group_id = $1 AND ug.user_id = $2;`
 
 	err = s.db.QueryRow(sqlQuery, groupID, userID).Scan(&role.RoleID, &role.RoleName)
+	return
+}
+
+func (s *storage) SelectUsersByGroupID(groupID int) (users []models2.UserRole, err error) {
+	users = make([]models2.UserRole, 0)
+	const sqlQuery = `
+	SELECT ug.user_id, ug.role_id, r.title
+	FROM users_groups as ug
+			 JOIN roles AS r ON ug.role_id = r.id
+	WHERE ug.group_id = $1;`
+
+	rows, err := s.db.Query(sqlQuery, groupID)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var tempUser models2.UserRole
+		tempUser.GroupID = groupID
+		err = rows.Scan(&tempUser.UserID, tempUser.RoleID, tempUser.RoleName)
+		if err != nil {
+			return
+		}
+		users = append(users, tempUser)
+	}
+
 	return
 }
 

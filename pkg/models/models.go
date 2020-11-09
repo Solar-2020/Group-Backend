@@ -25,16 +25,27 @@ const (
 )
 
 type Group struct {
-	ID          int             `json:"id"`
-	Title       string          `json:"title" validate:"required"`
-	Description string          `json:"description"`
-	URL         string          `json:"URL" validate:"required"`
-	CreateBy    int             `json:"createBy"`
-	CreatAt     time.Time       `json:"creatAt"`
-	AvatarURL   string          `json:"avatarURL"`
-	StatusID    int             `json:"-"`
-	Count       int             `json:"count"`
-	UserRole    UserRole `json:"userRole"`
+	ID          int       `json:"id"`
+	Title       string    `json:"title" validate:"required"`
+	Description string    `json:"description"`
+	URL         string    `json:"URL" validate:"required"`
+	CreateBy    int       `json:"createBy"`
+	CreatAt     time.Time `json:"creatAt"`
+	AvatarURL   string    `json:"avatarURL"`
+	StatusID    int       `json:"-"`
+	Count       int       `json:"count"`
+	UserRole    UserRole  `json:"userRole"`
+}
+
+type Membership struct {
+	UserID    int    `json:"userID"`
+	GroupID   int    `json:"groupID"`
+	RoleID    int    `json:"roleID"`
+	RoleName  string `json:"roleName"`
+	Email     string `json:"email" validate:"required,email"`
+	Name      string `json:"name" validate:"required"`
+	Surname   string `json:"surname"`
+	AvatarURL string `json:"avatarURL"`
 }
 
 type UserRole struct {

@@ -3,6 +3,7 @@ package group
 import (
 	"errors"
 	"fmt"
+	models3 "github.com/Solar-2020/Account-Backend/pkg/models"
 	"github.com/Solar-2020/Group-Backend/internal"
 	"github.com/Solar-2020/Group-Backend/internal/clients/account"
 	"github.com/Solar-2020/Group-Backend/internal/models"
@@ -34,6 +35,8 @@ type Service interface {
 	CheckPermission(group models2.Group, action models2.GroupAction, userID int) error
 
 	GetUserRole(groupID, userID int) (role models2.UserRole, err error)
+
+	GetMembershipList(groupID, userID int) (role []models2.Membership, err error)
 }
 
 var (
@@ -320,6 +323,39 @@ func (s *service) ResolveGroup(request models.ResolveInviteLinkRequest) (respons
 func (s *service) GetUserRole(groupID, userID int) (role models2.UserRole, err error) {
 	role, err = s.groupStorage.SelectGroupRole(groupID, userID)
 
+	return
+}
+
+func (s *service) GetMembershipList(groupID, userID int) (memberships []models2.Membership, err error) {
+	//TODO CHECK PERMISSION
+
+	memberships = make([]models2.Membership, 0)
+	usersRoles, err := s.groupStorage.SelectUsersByGroupID(groupID)
+	if err != nil {
+		return
+	}
+
+	//TODO REWORK TO ARRAY REQUEST
+	for i, _ := range usersRoles {
+		var tempUser models3.User
+		tempUser, err = s.accountClient.GetUserByID(memberships[i].UserID)
+		if err != nil {
+			return
+		}
+
+		tempMembership := models2.Membership{
+			UserID:    memberships[i].UserID,
+			GroupID:   memberships[i].GroupID,
+			RoleID:    memberships[i].RoleID,
+			RoleName:  memberships[i].RoleName,
+			Email:     tempUser.Email,
+			Name:      tempUser.Name,
+			Surname:   tempUser.Surname,
+			AvatarURL: tempUser.AvatarURL,
+		}
+
+		memberships = append(memberships, tempMembership)
+	}
 	return
 }
 

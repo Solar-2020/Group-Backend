@@ -42,6 +42,9 @@ type Transport interface {
 	AddLinkDecode(ctx *fasthttp.RequestCtx) (request models.AddInviteLinkRequest, userID int, err error)
 	RemoveLinkDecode(ctx *fasthttp.RequestCtx) (request models.RemoveInviteLinkRequest, err error)
 	ListLinkDecode(ctx *fasthttp.RequestCtx) (request models.ListInviteLinkRequest, err error)
+
+	GetMembershipListDecode(ctx *fasthttp.RequestCtx) (userID, groupID int, err error)
+	GetMembershipListEncode(response []models2.Membership, ctx *fasthttp.RequestCtx) (err error)
 }
 
 type transport struct {
@@ -111,7 +114,6 @@ func (t transport) UpdateDecode(ctx *fasthttp.RequestCtx) (request models2.Group
 		request = group
 		return
 	}
-
 
 	return request, userID, errors.New("userID not found")
 }
@@ -327,6 +329,7 @@ func (t transport) AddLinkDecode(ctx *fasthttp.RequestCtx) (request models.AddIn
 	}
 	return
 }
+
 func (t transport) RemoveLinkDecode(ctx *fasthttp.RequestCtx) (request models.RemoveInviteLinkRequest, err error) {
 	err = json.Unmarshal(ctx.Request.Body(), &request)
 	if err != nil {
@@ -335,11 +338,37 @@ func (t transport) RemoveLinkDecode(ctx *fasthttp.RequestCtx) (request models.Re
 	err = t.validator.Struct(request)
 	return
 }
+
 func (t transport) ListLinkDecode(ctx *fasthttp.RequestCtx) (request models.ListInviteLinkRequest, err error) {
 	err = json.Unmarshal(ctx.Request.Body(), &request)
 	if err != nil {
 		return
 	}
 	err = t.validator.Struct(request)
+	return
+}
+
+func (t transport) GetMembershipListDecode(ctx *fasthttp.RequestCtx) (userID, groupID int, err error) {
+	var ok bool
+	if groupID, err = http.GetUrlParamInt(ctx, "groupID"); err == nil {
+		return userID, groupID, err
+	}
+
+	userID, ok = ctx.UserValue("userID").(int)
+	if ok {
+		return
+	}
+
+	return userID, groupID, errors.New("userID not found")
+}
+
+func (t transport) GetMembershipListEncode(response []models2.Membership, ctx *fasthttp.RequestCtx) (err error) {
+	body, err := json.Marshal(response)
+	if err != nil {
+		return
+	}
+	ctx.Response.Header.SetContentType("application/json")
+	ctx.Response.Header.SetStatusCode(fasthttp.StatusOK)
+	ctx.SetBody(body)
 	return
 }

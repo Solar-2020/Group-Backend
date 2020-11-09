@@ -12,6 +12,7 @@ type groupStorage interface {
 	SelectGroupRole(groupID, userID int) (role models2.UserRole, err error)
 	SelectGroupsByUserID(userID int, groupID int) (group []models2.GroupPreview, err error)
 
+	SelectUsersByGroupID(groupID int) (users []models2.UserRole, err error)
 	InsertUser(groupID, userID, roleID int) (err error)
 	EditUserRole(groupID, userID, roleID int) (resultRole int, err error)
 	RemoveUser(groupID, userID int) (err error)
