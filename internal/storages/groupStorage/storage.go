@@ -220,6 +220,8 @@ func (s *storage) SelectGroupsByUserID(userID int, groupID int) (groups []models
 			return
 		}
 		tempGroup.UserID = userID
+		tempGroup.UserRole.UserID = userID
+		tempGroup.UserRole.GroupID = groupID
 		groups = append(groups, tempGroup)
 	}
 	return
