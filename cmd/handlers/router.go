@@ -9,16 +9,15 @@ import (
 func NewFastHttpRouter(group groupHandler.Handler, middleware Middleware) *fasthttprouter.Router {
 	router := fasthttprouter.New()
 
-	////router.Handle("GET", "/health", check)
-
 	router.PanicHandler = httputils.PanicHandler
 
 	router.Handle("GET", "/health", middleware.Log(httputils.HealthCheckHandler))
 
-	router.Handle("POST", "/api/group/group", middleware.Log(middleware.ExternalAuth(group.Create)))
-	router.Handle("DELETE", "/api/group/group/:groupID", middleware.Log(middleware.ExternalAuth(group.Delete)))
-	router.Handle("PUT", "/api/group/group/:groupID", middleware.Log(middleware.ExternalAuth(group.Update)))
 	router.Handle("GET", "/api/group/group/:groupID", middleware.Log(middleware.ExternalAuth(group.Get)))
+	router.Handle("POST", "/api/group/group", middleware.Log(middleware.ExternalAuth(group.Create)))
+	router.Handle("PUT", "/api/group/group/:groupID", middleware.Log(middleware.ExternalAuth(group.Update)))
+	router.Handle("DELETE", "/api/group/group/:groupID", middleware.Log(middleware.ExternalAuth(group.Delete)))
+
 	router.Handle("GET", "/api/group/list", middleware.Log(middleware.ExternalAuth(group.GetList)))
 
 	//router.Handle("GET", "/api/group/membership/:groupID", group.GetMembershipList)

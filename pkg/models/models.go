@@ -62,8 +62,9 @@ type GroupPreview struct {
 	URL         string     `json:"URL"`
 	AvatarURL   string     `json:"avatarURL"`
 	UserID      int        `json:"userID"`
-	UserRoleID  MemberRole `json:"userRoleID"`
-	UserRole    string     `json:"userRole"`
+	UserRole `json:"userRole"`
+	//UserRoleID  MemberRole `json:"userRoleID"`
+	//UserRole    string     `json:"userRole"`
 	Status      int        `json:"status"`
 	Count       int        `json:"count"`
 }

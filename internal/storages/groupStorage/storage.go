@@ -215,7 +215,7 @@ func (s *storage) SelectGroupsByUserID(userID int, groupID int) (groups []models
 	for rows.Next() {
 		var tempGroup models2.GroupPreview
 		err = rows.Scan(&tempGroup.ID, &tempGroup.Title, &tempGroup.Description, &tempGroup.URL,
-			&tempGroup.AvatarURL, &tempGroup.UserRoleID, &tempGroup.UserRole, &tempGroup.Status, &tempGroup.Count)
+			&tempGroup.AvatarURL, &tempGroup.UserRole.RoleID, &tempGroup.UserRole.RoleName, &tempGroup.Status, &tempGroup.Count)
 		if err != nil {
 			return
 		}
