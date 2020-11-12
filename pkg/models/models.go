@@ -69,8 +69,13 @@ type GroupPreview struct {
 	Count       int        `json:"count"`
 }
 
+type AuthorPack struct {
+	Login string	`json:"login"`
+	ID int			`json:"id"`
+}
+
 type GroupInviteLink struct {
 	Link   string    `json:"link"`
 	Added  time.Time `json:"added"`
-	Author int       `json:"author"`
+	Author AuthorPack    `json:"author"`
 }

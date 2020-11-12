@@ -307,6 +307,11 @@ func (s *service) ListGroupInviteLink(request models.ListInviteLinkRequest) (res
 	response.Links, err = s.groupStorage.ListShortLinksToGroup(request.Group)
 	for i, elem := range response.Links {
 		response.Links[i].Link = s.getLinkFromHash(elem.Link)
+		user, err := s.accountClient.GetUserByID(elem.Author.ID)
+		if err != nil {
+			continue
+		}
+		response.Links[i].Author.Login = user.Email
 	}
 	response.Group = request.Group
 	return

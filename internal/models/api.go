@@ -55,6 +55,7 @@ type RemoveInviteLinkRsponse struct {
 // POST /group/invite/list
 type ListInviteLinkRequest struct {
 	Group int `json:"group" validate:"required"`
+	UserID int `json:"user"`
 }
 type ListInviteLinkResponse struct {
 	Group int                      `json:"group"`

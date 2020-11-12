@@ -25,10 +25,10 @@ func NewFastHttpRouter(group groupHandler.Handler, middleware Middleware) *fasth
 	router.Handle("POST", "/api/group/membership", middleware.Log(middleware.ExternalAuth(group.EditRole)))
 	router.Handle("DELETE", "/api/group/membership", middleware.Log(middleware.ExternalAuth(group.Expel)))
 
-	//router.Handle("PUT", "/api/group/invite/:groupID", middleware.Log(middleware.InternalAuth(group.AddLink)))
-	//router.Handle("DELETE", "/api/group/invite", middleware.Log(middleware.InternalAuth(group.RemoveLink)))
-	//router.Handle("POST", "/api/group/invite/list", middleware.Log(middleware.InternalAuth(group.ListLinks)))
-	//router.Handle("POST", "/api/group/invite/resolve", middleware.Log(middleware.InternalAuth(group.Resolve)))
+	router.Handle("PUT", "/api/group/invite/:groupID", middleware.Log(middleware.ExternalAuth(group.AddLink)))
+	router.Handle("DELETE", "/api/group/invite", middleware.Log(middleware.ExternalAuth(group.RemoveLink)))
+	router.Handle("GET", "/api/group/invite/list", middleware.Log(middleware.ExternalAuth(group.ListLinks)))
+	router.Handle("GET", "/api/group/invite/resolve", middleware.Log(group.Resolve))
 
 	router.Handle("GET", "/api/internal/group/list", middleware.Log(middleware.InternalAuth(group.InternalGetList)))
 	router.Handle("GET", "/api/internal/group/permission", middleware.Log(middleware.InternalAuth(group.InternalGetPermission)))
