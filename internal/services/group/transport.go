@@ -300,11 +300,18 @@ func (t transport) ExpelDecode(ctx *fasthttp.RequestCtx) (request models.ExpelUs
 }
 
 func (t transport) ResolveDecode(ctx *fasthttp.RequestCtx) (request models.ResolveInviteLinkRequest, err error) {
-	err = json.Unmarshal(ctx.Request.Body(), &request)
-	if err != nil {
-		return
+	//err = json.Unmarshal(ctx.Request.Body(), &request)
+	//if err != nil {
+	//	return
+	//}
+	//err = t.validator.Struct(request)
+	if link, err := http.GetUrlParamString(ctx, "link"); err == nil {
+		request.Link = link
 	}
-	err = t.validator.Struct(request)
+	link := ctx.QueryArgs().Peek("link")
+	if link != nil {
+		request.Link  = string(link)
+	}
 	return
 }
 
@@ -340,11 +347,21 @@ func (t transport) RemoveLinkDecode(ctx *fasthttp.RequestCtx) (request models.Re
 }
 
 func (t transport) ListLinkDecode(ctx *fasthttp.RequestCtx) (request models.ListInviteLinkRequest, err error) {
-	err = json.Unmarshal(ctx.Request.Body(), &request)
-	if err != nil {
+	_group := ctx.QueryArgs().Peek("groupId")
+	if _group != nil {
+		request.Group, _ = strconv.Atoi(string(_group))
+	}
+
+	var ok bool
+	request.UserID, ok = ctx.UserValue("userID").(int)
+	if ok {
 		return
 	}
-	err = t.validator.Struct(request)
+	//err = json.Unmarshal(ctx.Request.Body(), &request)
+	//if err != nil {
+	//	return
+	//}
+	//err = t.validator.Struct(request)
 	return
 }
 

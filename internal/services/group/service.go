@@ -190,7 +190,7 @@ func (s *service) Invite(request models.InviteUserRequest) (response models.Invi
 	for _, email := range request.User {
 		uid, err := s.accountClient.GetUserIDByEmail(email)
 		if err != nil {
-			return response, errors.New(err.Error() + fmt.Sprintf("cant add user %s", email))
+			return response, errors.New(fmt.Sprintf("cant add user %s: " + err.Error(), email))
 		}
 		if _, ok := userIds[uid]; !ok {
 			request.UserID = append(request.UserID, uid)
@@ -307,6 +307,11 @@ func (s *service) ListGroupInviteLink(request models.ListInviteLinkRequest) (res
 	response.Links, err = s.groupStorage.ListShortLinksToGroup(request.Group)
 	for i, elem := range response.Links {
 		response.Links[i].Link = s.getLinkFromHash(elem.Link)
+		user, err := s.accountClient.GetUserByID(elem.Author.ID)
+		if err != nil {
+			continue
+		}
+		response.Links[i].Author.Login = user.Email
 	}
 	response.Group = request.Group
 	return

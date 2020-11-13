@@ -269,7 +269,7 @@ func (s *storage) ListShortLinksToGroup(groupID int) (res []models2.GroupInviteL
 
 	for rows.Next() {
 		link := models2.GroupInviteLink{}
-		err = rows.Scan(&link.Link, &link.Added, &link.Author)
+		err = rows.Scan(&link.Link, &link.Added, &link.Author.ID)
 		if err != nil {
 			return
 		}
