@@ -1,6 +1,7 @@
 package group
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	models3 "github.com/Solar-2020/Account-Backend/pkg/models"
@@ -32,7 +33,7 @@ type Service interface {
 	RemoveGroupInviteLink(request models.RemoveInviteLinkRequest) (response models.RemoveInviteLinkRsponse, err error)
 	ListGroupInviteLink(request models.ListInviteLinkRequest) (response models.ListInviteLinkResponse, err error)
 
-	CheckPermission(group models2.Group, action models2.GroupAction, userID int) error
+	CheckPermission(action models2.GroupAction) (err error)
 
 	GetUserRole(groupID, userID int) (role models2.UserRole, err error)
 
@@ -190,7 +191,7 @@ func (s *service) Invite(request models.InviteUserRequest) (response models.Invi
 	for _, email := range request.User {
 		uid, err := s.accountClient.GetUserIDByEmail(email)
 		if err != nil {
-			return response, errors.New(fmt.Sprintf("cant add user %s: " + err.Error(), email))
+			return response, errors.New(fmt.Sprintf("cant add user %s: "+err.Error(), email))
 		}
 		if _, ok := userIds[uid]; !ok {
 			request.UserID = append(request.UserID, uid)
@@ -244,24 +245,24 @@ func (s *service) ExpelUser(request models.ExpelUserRequest) (response models.Ex
 	return
 }
 
-func (s *service) CheckPermission(group models2.Group, action models2.GroupAction, userID int) error {
-	denied := fmt.Errorf("denied")
-	if action == models2.ActionCreate {
-		if group.CreateBy != 0 && userID != group.CreateBy {
-			return denied
+func (s *service) CheckPermission(action models2.GroupAction) (err error) {
+	role, err := s.groupStorage.SelectGroupRole(action.GroupID, action.UserID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return models.ErrorNoMembership
 		}
+		return err
 	}
-	switch action {
-	case models2.ActionCreate:
-		if group.CreateBy != 0 && userID != group.CreateBy {
-			return denied
+
+	_, err = s.groupStorage.SelectPermission(action.ActionID, role.RoleID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return models.ErrorNoPermission
 		}
-	case models2.ActionGet:
-		return s.checkUserPermission(group.ID, userID)
-	case models2.ActionEdit, models2.ActionEditRole, models2.ActionInvite, models2.ActionExpel, models2.ActionRemove:
-		return s.checkAdminPermission(group.ID, userID)
+		return err
 	}
-	return denied
+
+	return
 }
 
 func (s *service) AddGroupInviteLink(request models.AddInviteLinkRequest, userID int) (response models.AddInviteLinkResponse, err error) {

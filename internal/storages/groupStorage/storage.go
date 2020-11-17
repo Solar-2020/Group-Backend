@@ -3,6 +3,7 @@ package groupStorage
 import (
 	"database/sql"
 	"fmt"
+	"github.com/Solar-2020/Group-Backend/internal/models"
 	models2 "github.com/Solar-2020/Group-Backend/pkg/models"
 	"github.com/lib/pq"
 )
@@ -20,6 +21,7 @@ type Storage interface {
 	UpdateGroupStatus(groupID, statusID int) (group models2.Group, err error)
 	SelectGroupByID(groupID int) (group models2.Group, err error)
 	SelectGroupRole(groupID, userID int) (role models2.UserRole, err error)
+	SelectPermission(actionID, roleID int) (permission models.Permission, err error)
 	SelectGroupsByUserID(userID int, groupID int) (group []models2.GroupPreview, err error)
 
 	SelectUsersByGroupID(groupID int) (users []models2.UserRole, err error)
@@ -107,6 +109,17 @@ func (s *storage) SelectGroupRole(groupID, userID int) (role models2.UserRole, e
 	WHERE ug.group_id = $1 AND ug.user_id = $2;`
 
 	err = s.db.QueryRow(sqlQuery, groupID, userID).Scan(&role.RoleID, &role.RoleName)
+	return
+}
+
+func (s *storage) SelectPermission(actionID, roleID int) (permission models.Permission, err error) {
+	const sqlQuery = `
+	SELECT rp.action_id, rp.role_id
+	FROM permission as rp
+	WHERE rp.action_id = $1 AND rp.role_id = $2;`
+
+	err = s.db.QueryRow(sqlQuery, actionID, roleID).Scan(&permission.ActionID, &permission.RoleID)
+
 	return
 }
 

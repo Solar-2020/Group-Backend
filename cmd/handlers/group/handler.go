@@ -15,6 +15,7 @@ type Handler interface {
 	GetList(ctx *fasthttp.RequestCtx)
 	InternalGetList(ctx *fasthttp.RequestCtx)
 	InternalGetPermission(ctx *fasthttp.RequestCtx)
+	InternalCheckPermission(ctx *fasthttp.RequestCtx)
 	GetMembershipList(ctx *fasthttp.RequestCtx)
 	Invite(ctx *fasthttp.RequestCtx)
 	EditRole(ctx *fasthttp.RequestCtx)
@@ -173,6 +174,26 @@ func (h *handler) InternalGetPermission(ctx *fasthttp.RequestCtx) {
 	}
 
 	err = h.groupTransport.InternalGetPermissionEncode(groupList, ctx)
+	if err != nil {
+		h.handleError(err, ctx)
+		return
+	}
+}
+
+func (h *handler) InternalCheckPermission(ctx *fasthttp.RequestCtx) {
+	groupAction, err := h.groupTransport.InternalCheckPermissionDecode(ctx)
+	if err != nil {
+		h.handleError(err, ctx)
+		return
+	}
+
+	err = h.groupService.CheckPermission(groupAction)
+	if err != nil {
+		h.handleError(err, ctx)
+		return
+	}
+
+	err = h.groupTransport.InternalCheckPermissionEncode(ctx, err)
 	if err != nil {
 		h.handleError(err, ctx)
 		return

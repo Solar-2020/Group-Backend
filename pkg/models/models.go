@@ -12,18 +12,6 @@ const (
 	roleDweller            = 3
 )
 
-type GroupAction int
-
-const (
-	ActionCreate GroupAction = iota
-	ActionEdit
-	ActionRemove
-	ActionGet
-	ActionInvite
-	ActionEditRole
-	ActionExpel
-)
-
 type Group struct {
 	ID          int       `json:"id"`
 	Title       string    `json:"title" validate:"required"`
@@ -56,26 +44,33 @@ type UserRole struct {
 }
 
 type GroupPreview struct {
-	ID          int        `json:"id"`
-	Title       string     `json:"title"`
-	Description string     `json:"description"`
-	URL         string     `json:"URL"`
-	AvatarURL   string     `json:"avatarURL"`
-	UserID      int        `json:"userID"`
-	UserRole `json:"userRole"`
+	ID          int    `json:"id"`
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	URL         string `json:"URL"`
+	AvatarURL   string `json:"avatarURL"`
+	UserID      int    `json:"userID"`
+	UserRole    `json:"userRole"`
 	//UserRoleID  MemberRole `json:"userRoleID"`
 	//UserRole    string     `json:"userRole"`
-	Status      int        `json:"status"`
-	Count       int        `json:"count"`
+	Status int `json:"status"`
+	Count  int `json:"count"`
 }
 
 type AuthorPack struct {
-	Login string	`json:"login"`
-	ID int			`json:"id"`
+	Login string `json:"login"`
+	ID    int    `json:"id"`
 }
 
 type GroupInviteLink struct {
-	Link   string    `json:"link"`
-	Added  time.Time `json:"added"`
-	Author AuthorPack    `json:"author"`
+	Link   string     `json:"link"`
+	Added  time.Time  `json:"added"`
+	Author AuthorPack `json:"author"`
+}
+
+type GroupAction struct {
+	GroupID    int    `json:"groupID"`
+	UserID     int    `json:"userID"`
+	ActionID   int    `json:"actionID"`
+	ActionPath string `json:"-"`
 }
