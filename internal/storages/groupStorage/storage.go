@@ -90,7 +90,7 @@ func (s *storage) SelectGroupByID(groupID int) (group models2.Group, err error) 
 		   g.avatar_url,
 		   g.members
 	FROM groups as g
-	WHERE g.id = $1;`
+	WHERE g.id = $1 AND g.status_id = 1;`
 
 	err = s.db.QueryRow(sqlQuery, groupID).Scan(&group.ID, &group.Title, &group.Description, &group.URL,
 		&group.CreateBy, &group.CreatAt, &group.StatusID, &group.AvatarURL, &group.Count)
@@ -196,7 +196,7 @@ func (s *storage) SelectGroupsByUserID(userID int, groupID int) (groups []models
 	FROM groups AS g
 			 JOIN users_groups AS ug ON g.id = ug.group_id
 			 JOIN roles AS r ON ug.role_id = r.id
-	WHERE ug.user_id = $1`
+	WHERE ug.user_id = $1 AND g.status_id = 1`
 	params := []interface{}{
 		userID,
 	}
