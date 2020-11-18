@@ -43,7 +43,7 @@ func main() {
 	errorWorker := errorWorker.NewErrorWorker()
 
 	groupStorage := groupStorage.NewStorage(groupDB)
-	accountClient := account.NewClient(internal.Config.AccountServiceAddress, internal.Config.ServerSecret)
+	accountClient := account.NewClient(internal.Config.AccountServiceHost, internal.Config.ServerSecret)
 	groupService := group.NewService(groupStorage, accountClient, errorWorker)
 	groupTransport := group.NewTransport()
 

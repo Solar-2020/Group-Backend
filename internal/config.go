@@ -11,4 +11,5 @@ type configTemplate struct {
 	GroupDataBaseConnectionString string `envconfig:"GROUP_DB_CONNECTION_STRING" required:"true"`
 	InviteLinkPrefix              string `envconfig:"INVITE_GROUP_PREFIX_ADDRESS" default:"http://nl-mail.ru/welcome"`
 	ServerSecret                  string `envconfig:"SERVER_SECRET" default:"Basic secret"`
+	AccountServiceHost            string `envconfig:"ACCOUNT_SERVICE_HOST" default:"develop.pay-together.ru"`
 }
