@@ -2,6 +2,7 @@ package client
 
 import (
 	"encoding/json"
+	"github.com/Solar-2020/GoUtils/http/errorWorker"
 	"github.com/pkg/errors"
 	"github.com/valyala/fasthttp"
 	"strconv"
@@ -12,12 +13,13 @@ type Client interface {
 }
 
 type client struct {
-	host   string
-	secret string
+	host        string
+	secret      string
+	errorWorker errorWorker.ErrorWorker
 }
 
 func NewClient(host string, secret string) Client {
-	return &client{host: host, secret: secret}
+	return &client{host: host, secret: secret, errorWorker: errorWorker.NewErrorWorker()}
 }
 
 func (c *client) CheckPermission(userID, groupId, actionID int) (err error) {
@@ -39,7 +41,7 @@ func (c *client) CheckPermission(userID, groupId, actionID int) (err error) {
 
 	err = fasthttp.Do(req, resp)
 	if err != nil {
-		return
+		return c.errorWorker.NewError(fasthttp.StatusInternalServerError, nil, err)
 	}
 
 	switch resp.StatusCode() {
@@ -49,25 +51,17 @@ func (c *client) CheckPermission(userID, groupId, actionID int) (err error) {
 		var httpErr httpError
 		err = json.Unmarshal(resp.Body(), &httpErr)
 		if err != nil {
-			return
+			return c.errorWorker.NewError(fasthttp.StatusInternalServerError, nil, err)
 		}
-		return errors.New(httpErr.Error)
+		return c.errorWorker.NewError(fasthttp.StatusBadRequest, errors.New(httpErr.Error), errors.New(httpErr.Error))
 	case fasthttp.StatusForbidden:
 		var httpErr httpError
 		err = json.Unmarshal(resp.Body(), &httpErr)
 		if err != nil {
-			return
+			return c.errorWorker.NewError(fasthttp.StatusInternalServerError, nil, err)
 		}
-		return ResponseError{
-			StatusCode: resp.StatusCode(),
-			Message:    ForbiddenStatus,
-			Err:        errors.Errorf(ErrorUnknownStatusCode, resp.StatusCode()),
-		}
+		return c.errorWorker.NewError(fasthttp.StatusForbidden, errors.New(httpErr.Error), errors.New(httpErr.Error))
 	default:
-		return ResponseError{
-			StatusCode: resp.StatusCode(),
-			Message:    InternalServerStatus,
-			Err:        errors.Errorf(ErrorUnknownStatusCode, resp.StatusCode()),
-		}
+		return c.errorWorker.NewError(fasthttp.StatusInternalServerError, nil, errors.Errorf(ErrorUnknownStatusCode, resp.StatusCode()))
 	}
 }
