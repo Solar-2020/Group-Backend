@@ -3,13 +3,13 @@ package main
 import (
 	"database/sql"
 	asapi "github.com/Solar-2020/Account-Backend/pkg/api"
+	account "github.com/Solar-2020/Account-Backend/pkg/client"
 	authapi "github.com/Solar-2020/Authorization-Backend/pkg/api"
 	"github.com/Solar-2020/GoUtils/context/session"
 	"github.com/Solar-2020/GoUtils/http/errorWorker"
 	"github.com/Solar-2020/Group-Backend/cmd/handlers"
 	groupHandler "github.com/Solar-2020/Group-Backend/cmd/handlers/group"
 	"github.com/Solar-2020/Group-Backend/internal"
-	"github.com/Solar-2020/Group-Backend/internal/clients/account"
 	"github.com/Solar-2020/Group-Backend/internal/clients/auth"
 	"github.com/Solar-2020/Group-Backend/internal/services/group"
 	"github.com/Solar-2020/Group-Backend/internal/storages/groupStorage"
@@ -43,8 +43,8 @@ func main() {
 	errorWorker := errorWorker.NewErrorWorker()
 
 	groupStorage := groupStorage.NewStorage(groupDB)
-	accountClient := account.NewClient(internal.Config.AccountServiceAddress, internal.Config.ServerSecret)
-	groupService := group.NewService(groupStorage, accountClient)
+	accountClient := account.NewClient(internal.Config.AccountServiceHost, internal.Config.ServerSecret)
+	groupService := group.NewService(groupStorage, accountClient, errorWorker)
 	groupTransport := group.NewTransport()
 
 	authService := authapi.AuthClient{

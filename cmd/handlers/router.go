@@ -33,5 +33,7 @@ func NewFastHttpRouter(group groupHandler.Handler, middleware Middleware) *fasth
 	router.Handle("GET", "/api/internal/group/list", middleware.Log(middleware.InternalAuth(group.InternalGetList)))
 	router.Handle("GET", "/api/internal/group/permission", middleware.Log(middleware.InternalAuth(group.InternalGetPermission)))
 
+	router.Handle("GET", "/api/internal/group/check-permission", middleware.Log(middleware.InternalAuth(group.InternalCheckPermission)))
+
 	return router
 }

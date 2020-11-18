@@ -1,11 +1,11 @@
 package group
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	models3 "github.com/Solar-2020/Account-Backend/pkg/models"
 	"github.com/Solar-2020/Group-Backend/internal"
-	"github.com/Solar-2020/Group-Backend/internal/clients/account"
 	"github.com/Solar-2020/Group-Backend/internal/models"
 	models2 "github.com/Solar-2020/Group-Backend/pkg/models"
 	"math/rand"
@@ -32,7 +32,7 @@ type Service interface {
 	RemoveGroupInviteLink(request models.RemoveInviteLinkRequest) (response models.RemoveInviteLinkRsponse, err error)
 	ListGroupInviteLink(request models.ListInviteLinkRequest) (response models.ListInviteLinkResponse, err error)
 
-	CheckPermission(group models2.Group, action models2.GroupAction, userID int) error
+	CheckPermission(action models2.GroupAction) (err error)
 
 	GetUserRole(groupID, userID int) (role models2.UserRole, err error)
 
@@ -45,13 +45,15 @@ var (
 
 type service struct {
 	groupStorage  groupStorage
-	accountClient account.Client
+	accountClient accountClient
+	errorWorker   errorWorker
 }
 
-func NewService(groupStorage groupStorage, ac account.Client) Service {
+func NewService(groupStorage groupStorage, accountClient accountClient, errorWorker errorWorker) Service {
 	return &service{
 		groupStorage:  groupStorage,
-		accountClient: ac,
+		accountClient: accountClient,
+		errorWorker:   errorWorker,
 	}
 }
 
@@ -188,13 +190,14 @@ func (s *service) Invite(request models.InviteUserRequest) (response models.Invi
 		return m
 	}()
 	for _, email := range request.User {
-		uid, err := s.accountClient.GetUserIDByEmail(email)
+		user, err := s.accountClient.GetUserByEmail(email)
 		if err != nil {
-			return response, errors.New(fmt.Sprintf("cant add user %s: " + err.Error(), email))
+			return response, errors.New(fmt.Sprintf("cant add user %s: "+err.Error(), email))
 		}
-		if _, ok := userIds[uid]; !ok {
-			request.UserID = append(request.UserID, uid)
-			userIds[uid] = true
+
+		if _, ok := userIds[user.ID]; !ok {
+			request.UserID = append(request.UserID, user.ID)
+			userIds[user.ID] = true
 		}
 	}
 
@@ -220,11 +223,12 @@ func (s *service) Invite(request models.InviteUserRequest) (response models.Invi
 
 func (s *service) ChangeRole(request models.ChangeRoleRequest) (response models.ChangeRoleResponse, err error) {
 	if request.UserID == 0 {
-		request.UserID, err = s.accountClient.GetUserIDByEmail(request.User)
+		user, err := s.accountClient.GetUserByEmail(request.User)
 		if err != nil {
 			err = fmt.Errorf("bad user: %s", err)
-			return
+			return response, err
 		}
+		request.UserID = user.ID
 	}
 	newRole, err := s.groupStorage.EditUserRole(request.Group, request.UserID, int(request.Role))
 	response.Role = models2.MemberRole(newRole)
@@ -233,35 +237,36 @@ func (s *service) ChangeRole(request models.ChangeRoleRequest) (response models.
 
 func (s *service) ExpelUser(request models.ExpelUserRequest) (response models.ExpelUserResponse, err error) {
 	if request.UserID == 0 {
-		request.UserID, err = s.accountClient.GetUserIDByEmail(request.User)
+		user, err := s.accountClient.GetUserByEmail(request.User)
 		if err != nil {
 			err = fmt.Errorf("bad user: %s", err)
-			return
+			return response, err
 		}
+		request.UserID = user.ID
 	}
 	err = s.groupStorage.RemoveUser(int(request.Group), request.UserID)
 	response.User = request.User
 	return
 }
 
-func (s *service) CheckPermission(group models2.Group, action models2.GroupAction, userID int) error {
-	denied := fmt.Errorf("denied")
-	if action == models2.ActionCreate {
-		if group.CreateBy != 0 && userID != group.CreateBy {
-			return denied
+func (s *service) CheckPermission(action models2.GroupAction) (err error) {
+	role, err := s.groupStorage.SelectGroupRole(action.GroupID, action.UserID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return models.ErrorNoMembership
 		}
+		return err
 	}
-	switch action {
-	case models2.ActionCreate:
-		if group.CreateBy != 0 && userID != group.CreateBy {
-			return denied
+
+	_, err = s.groupStorage.SelectPermission(action.ActionID, role.RoleID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return models.ErrorNoPermission
 		}
-	case models2.ActionGet:
-		return s.checkUserPermission(group.ID, userID)
-	case models2.ActionEdit, models2.ActionEditRole, models2.ActionInvite, models2.ActionExpel, models2.ActionRemove:
-		return s.checkAdminPermission(group.ID, userID)
+		return err
 	}
-	return denied
+
+	return
 }
 
 func (s *service) AddGroupInviteLink(request models.AddInviteLinkRequest, userID int) (response models.AddInviteLinkResponse, err error) {
@@ -307,7 +312,7 @@ func (s *service) ListGroupInviteLink(request models.ListInviteLinkRequest) (res
 	response.Links, err = s.groupStorage.ListShortLinksToGroup(request.Group)
 	for i, elem := range response.Links {
 		response.Links[i].Link = s.getLinkFromHash(elem.Link)
-		user, err := s.accountClient.GetUserByID(elem.Author.ID)
+		user, err := s.accountClient.GetUserByUid(elem.Author.ID)
 		if err != nil {
 			continue
 		}
@@ -343,7 +348,7 @@ func (s *service) GetMembershipList(groupID, userID int) (memberships []models2.
 	//TODO REWORK TO ARRAY REQUEST
 	for i, _ := range usersRoles {
 		var tempUser models3.User
-		tempUser, err = s.accountClient.GetUserByID(usersRoles[i].UserID)
+		tempUser, err = s.accountClient.GetUserByUid(usersRoles[i].UserID)
 		if err != nil {
 			return
 		}

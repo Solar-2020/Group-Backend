@@ -33,6 +33,9 @@ type Transport interface {
 	InternalGetPermissionDecode(ctx *fasthttp.RequestCtx) (userID, groupID int, err error)
 	InternalGetPermissionEncode(response models2.UserRole, ctx *fasthttp.RequestCtx) (err error)
 
+	InternalCheckPermissionDecode(ctx *fasthttp.RequestCtx) (groupAction models2.GroupAction, err error)
+	InternalCheckPermissionEncode(ctx *fasthttp.RequestCtx, permissionErr error) (err error)
+
 	InviteDecode(ctx *fasthttp.RequestCtx) (request models.InviteUserRequest, err error)
 
 	ChangeRoleDecode(ctx *fasthttp.RequestCtx) (request models.ChangeRoleRequest, err error)
@@ -259,6 +262,44 @@ func (t transport) InternalGetPermissionEncode(response models2.UserRole, ctx *f
 	return
 }
 
+func (t transport) InternalCheckPermissionDecode(ctx *fasthttp.RequestCtx) (groupAction models2.GroupAction, err error) {
+	_groupID := ctx.QueryArgs().Peek("group_id")
+	groupAction.GroupID, err = strconv.Atoi(string(_groupID))
+	if err != nil {
+		return
+	}
+
+	_userID := ctx.QueryArgs().Peek("user_id")
+	groupAction.UserID, err = strconv.Atoi(string(_userID))
+	if err != nil {
+		return
+	}
+
+	_actionID := ctx.QueryArgs().Peek("action_id")
+	groupAction.ActionID, err = strconv.Atoi(string(_actionID))
+	if err != nil {
+		return
+	}
+
+	return
+}
+
+func (t transport) InternalCheckPermissionEncode(ctx *fasthttp.RequestCtx, permissionErr error) (err error) {
+	if permissionErr == nil {
+		ctx.Response.Header.SetStatusCode(fasthttp.StatusOK)
+		return
+	}
+
+	body, err := json.Marshal(err)
+	if err != nil {
+		return
+	}
+	ctx.Response.Header.SetContentType("application/json")
+	ctx.Response.Header.SetStatusCode(fasthttp.StatusForbidden)
+	ctx.SetBody(body)
+	return
+}
+
 func (t transport) InviteDecode(ctx *fasthttp.RequestCtx) (request models.InviteUserRequest, err error) {
 	var ok bool
 	err = json.Unmarshal(ctx.Request.Body(), &request)
@@ -310,7 +351,7 @@ func (t transport) ResolveDecode(ctx *fasthttp.RequestCtx) (request models.Resol
 	}
 	link := ctx.QueryArgs().Peek("link")
 	if link != nil {
-		request.Link  = string(link)
+		request.Link = string(link)
 	}
 	return
 }
@@ -369,7 +410,7 @@ func (t transport) GetMembershipListDecode(ctx *fasthttp.RequestCtx) (userID, gr
 	var ok bool
 	if groupID == 0 {
 		if urlId, err := http.GetUrlParamInt(ctx, "groupID"); err == nil {
-			groupID= urlId
+			groupID = urlId
 		}
 	}
 	//userID = 12
