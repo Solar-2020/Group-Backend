@@ -196,11 +196,7 @@ func (s *service) Invite(request models.InviteUserRequest) (response models.Invi
 			newUser := models3.UserAdvance{
 				Email: email,
 			}
-			userID, err := s.accountClient.CreateUserAdvance(newUser)
-			if err != nil {
-				return response, s.errorWorker.NewError(fasthttp.StatusInternalServerError, ErrorInternalServer, err)
-			}
-			user, err = s.accountClient.GetUserByUid(userID)
+			user, err = s.accountClient.CreateUserAdvance(newUser)
 			if err != nil {
 				return response, s.errorWorker.NewError(fasthttp.StatusInternalServerError, ErrorInternalServer, err)
 			}

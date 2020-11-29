@@ -22,6 +22,7 @@ func NewFastHttpRouter(group groupHandler.Handler, middleware Middleware) *fasth
 
 	router.Handle("GET", "/api/group/membership/:groupID", middleware.Log(middleware.ExternalAuth(group.GetMembershipList)))
 	router.Handle("PUT", "/api/group/membership/:groupID", middleware.Log(middleware.ExternalAuth(group.Invite)))
+	//router.Handle("PUT", "/api/group/membership/:groupID", middleware.Log(group.Invite))
 	router.Handle("POST", "/api/group/membership", middleware.Log(middleware.ExternalAuth(group.EditRole)))
 	router.Handle("DELETE", "/api/group/membership", middleware.Log(middleware.ExternalAuth(group.Expel)))
 

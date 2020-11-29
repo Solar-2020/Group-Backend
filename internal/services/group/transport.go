@@ -313,7 +313,7 @@ func (t transport) InviteDecode(ctx *fasthttp.RequestCtx) (request models.Invite
 		}
 	}
 	err = t.validator.Struct(request)
-
+	//request.CreatorID =280
 	request.CreatorID, ok = ctx.UserValue("userID").(int)
 	if ok {
 		return

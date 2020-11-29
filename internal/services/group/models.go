@@ -34,7 +34,7 @@ type groupStorage interface {
 type accountClient interface {
 	GetUserByUid(userID int) (user account.User, err error)
 	GetUserByEmail(email string) (user account.User, err error)
-	CreateUserAdvance(request account.UserAdvance) (userID int, err error)
+	CreateUserAdvance(request account.UserAdvance) (user account.User, err error)
 }
 
 type errorWorker interface {
