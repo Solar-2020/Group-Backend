@@ -8,6 +8,7 @@ import (
 	"github.com/Solar-2020/Group-Backend/internal"
 	"github.com/Solar-2020/Group-Backend/internal/models"
 	models2 "github.com/Solar-2020/Group-Backend/pkg/models"
+	"github.com/valyala/fasthttp"
 	"math/rand"
 	"regexp"
 	"strings"
@@ -192,7 +193,17 @@ func (s *service) Invite(request models.InviteUserRequest) (response models.Invi
 	for _, email := range request.User {
 		user, err := s.accountClient.GetUserByEmail(email)
 		if err != nil {
-			return response, errors.New(fmt.Sprintf("cant add user %s: "+err.Error(), email))
+			newUser := models3.UserAdvance{
+				Email: email,
+			}
+			userID, err := s.accountClient.CreateUserAdvance(newUser)
+			if err != nil {
+				return response, s.errorWorker.NewError(fasthttp.StatusInternalServerError, ErrorInternalServer, err)
+			}
+			user, err = s.accountClient.GetUserByUid(userID)
+			if err != nil {
+				return response, s.errorWorker.NewError(fasthttp.StatusInternalServerError, ErrorInternalServer, err)
+			}
 		}
 
 		if _, ok := userIds[user.ID]; !ok {
