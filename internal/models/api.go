@@ -64,9 +64,11 @@ type ListInviteLinkResponse struct {
 
 // POST /group/invite/resolves
 type ResolveInviteLinkRequest struct {
-	Link string `json:"link"`
+	Link   string `json:"link"`
+	UserID int    `json:"userId"`
 }
 type ResolveInviteLinkResponse struct {
 	Group int `json:"group"`
+	UserID int `json:"userId,omitempty"`
 }
 

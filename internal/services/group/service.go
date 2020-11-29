@@ -334,6 +334,11 @@ func (s *service) ResolveGroup(request models.ResolveInviteLinkRequest) (respons
 	id, err := s.groupStorage.HashToGroupID(linkHash)
 	temp, err := s.groupStorage.SelectGroupByID(id)
 	response.Group = temp.ID
+	if request.UserID == 0 {
+		return
+	}
+	err = s.groupStorage.InsertUser(response.Group, request.UserID, 3)
+	response.UserID = request.UserID
 	return
 }
 

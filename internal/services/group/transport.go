@@ -353,6 +353,9 @@ func (t transport) ResolveDecode(ctx *fasthttp.RequestCtx) (request models.Resol
 	if link != nil {
 		request.Link = string(link)
 	}
+	if tempInt := ctx.UserValue("userID"); tempInt != nil {
+		request.UserID = tempInt.(int)
+	}
 	return
 }
 
