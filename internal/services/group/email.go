@@ -10,6 +10,10 @@ import (
 	"text/template"
 )
 
+const (
+	maxFails = 2
+)
+
 var (
 	queue Queue
 	queueInit sync.Once
@@ -111,7 +115,13 @@ func doSend() {
 	auth := smtp.PlainAuth("", p.From, internal.Config.InviteLetterSenderPassword, p.Host)
 	if err := smtp.SendMail(p.Host+":25", auth, p.From, []string{p.To}, p.Message); err != nil {
 		fmt.Println("Mailer: cannot send email to ", p.To, err)
+		p.Retries +=1
+		if p.Retries < maxFails {
+			queue.Enqueue(p)
+		}
+		queue.timespan *= 3
 		return
 	}
 	fmt.Println("Mailer: message sent to ", p.To)
+	queue.timespan = internal.Config.InviteLetterTimespan
 }

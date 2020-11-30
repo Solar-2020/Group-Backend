@@ -13,6 +13,7 @@ type Package struct {
 	From string
 	To string
 	Message []byte
+	Retries int
 }
 
 type Queue struct {

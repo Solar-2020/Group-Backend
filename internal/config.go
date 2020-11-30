@@ -19,4 +19,5 @@ type configTemplate struct {
 	InviteLetterSenderPassword		string `envconfig:"INVITE_LETTERS_PASSWORD" required:"true"`
 	InviteLetterBasePath			string `envconfig:"INVITE_LETTERS_BASE_PATH" default:"/templates"`
 	InviteLetterTimespan			int    `envconfig:"INVITE_LETTERS_TIMESPAN" default:"20"`
+	InviteLetterMaxRetries			int    `envconfig:"INVITE_LETTERS_MAX_RETRIES" default:"2"`
 }
