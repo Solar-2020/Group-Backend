@@ -3,9 +3,16 @@ package group
 import (
 	"bytes"
 	"encoding/base64"
+	"fmt"
 	"github.com/Solar-2020/Group-Backend/internal"
 	"net/smtp"
+	"sync"
 	"text/template"
+)
+
+var (
+	queue Queue
+	queueInit sync.Once
 )
 
 type TemplateUser struct {
@@ -78,10 +85,32 @@ func sendInviteMessage(to string, adminName, adminSirname, adminEmail, adminAvat
 		return
 	}
 
-	auth := smtp.PlainAuth("", from, internal.Config.InviteLetterSenderPassword, host)
-	if err := smtp.SendMail(host+":25", auth, from, []string{to}, baseWriter.Bytes()); err != nil {
-		return err
-	}
+	queueInit.Do(func(){
+		queue.Init(internal.Config.InviteLetterTimespan)
+	})
+
+	queue.Enqueue(Package{
+		Host:    host,
+		From:    from,
+		To:      to,
+		Message: baseWriter.Bytes(),
+	})
+
+	go doSend()
+
+	//auth := smtp.PlainAuth("", from, internal.Config.InviteLetterSenderPassword, host)
+	//if err := smtp.SendMail(host+":25", auth, from, []string{to}, baseWriter.Bytes()); err != nil {
+	//	return err
+	//}
 
 	return nil
+}
+
+func doSend() {
+	p := queue.Dequeue()
+	auth := smtp.PlainAuth("", p.From, internal.Config.InviteLetterSenderPassword, p.Host)
+	if err := smtp.SendMail(p.Host+":25", auth, p.From, []string{p.To}, p.Message); err != nil {
+		fmt.Println("Mailer: cannot send email to ", p.To, err)
+	}
+	fmt.Println("Mailer: message sent to ", p.To)
 }
