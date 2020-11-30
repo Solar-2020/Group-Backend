@@ -18,5 +18,5 @@ type configTemplate struct {
 	InviteLetterSender				string `envconfig:"INVITE_LETTERS_SENDER" default:"invite@pay-together.ru"`
 	InviteLetterSenderPassword		string `envconfig:"INVITE_LETTERS_PASSWORD" required:"true"`
 	InviteLetterBasePath			string `envconfig:"INVITE_LETTERS_BASE_PATH" default:"/templates"`
-	InviteLetterTimespan				int    `envconfig:"INVITE_LETTERS_TIMESPAN" default:"10"`
+	InviteLetterTimespan			int    `envconfig:"INVITE_LETTERS_TIMESPAN" default:"20"`
 }

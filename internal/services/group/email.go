@@ -111,6 +111,7 @@ func doSend() {
 	auth := smtp.PlainAuth("", p.From, internal.Config.InviteLetterSenderPassword, p.Host)
 	if err := smtp.SendMail(p.Host+":25", auth, p.From, []string{p.To}, p.Message); err != nil {
 		fmt.Println("Mailer: cannot send email to ", p.To, err)
+		return
 	}
 	fmt.Println("Mailer: message sent to ", p.To)
 }
