@@ -37,6 +37,7 @@ RUN apk --no-cache add curl
 COPY --from=builder /dist/main /
 
 ADD ./scripts/run.sh /run.sh
+ADD ./templates /templates
 
 ENV GIT_BRANCH="main"
 ENV SERVICE_NAME="default"

@@ -200,6 +200,12 @@ func (s *service) Invite(request models.InviteUserRequest) (response models.Invi
 			if err != nil {
 				return response, s.errorWorker.NewError(fasthttp.StatusInternalServerError, ErrorInternalServer, err)
 			}
+			go func(){
+				err := s.createInviteEmail(email, request)
+				if err != nil {
+					fmt.Println("Cannot send invite letter: ", err)
+				}
+			}()
 		}
 
 		if _, ok := userIds[user.ID]; !ok {
@@ -394,4 +400,21 @@ func (s *service) getHashFromLink(src string) (res string, err error) {
 
 func (s *service) getLinkFromHash(src string) string {
 	return fmt.Sprintf("%s/%s", internal.Config.InviteLinkPrefix, src)
+}
+
+func (s *service) createInviteEmail(email string, request models.InviteUserRequest) (err error) {
+	admin, err := s.accountClient.GetUserByUid(request.CreatorID)
+	if err != nil {
+		return err
+	}
+	group, err := s.groupStorage.SelectGroupByID(request.Group)
+	if err != nil {
+		return err
+	}
+	addLinkResp, err := s.AddGroupInviteLink(models.AddInviteLinkRequest{Group:request.Group}, request.CreatorID)
+	if err != nil {
+		return err
+	}
+	err = sendInviteMessage(email, admin.Name, admin.Surname, admin.Email, admin.AvatarURL, group.Title, addLinkResp.Link)
+	return
 }
