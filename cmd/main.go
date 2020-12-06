@@ -2,21 +2,19 @@ package main
 
 import (
 	"database/sql"
-	asapi "github.com/Solar-2020/Account-Backend/pkg/api"
 	account "github.com/Solar-2020/Account-Backend/pkg/client"
-	authapi "github.com/Solar-2020/Authorization-Backend/pkg/api"
-	"github.com/Solar-2020/GoUtils/context/session"
+	auth "github.com/Solar-2020/Authorization-Backend/pkg/client"
 	"github.com/Solar-2020/GoUtils/http/errorWorker"
 	"github.com/Solar-2020/Group-Backend/cmd/handlers"
 	groupHandler "github.com/Solar-2020/Group-Backend/cmd/handlers/group"
 	"github.com/Solar-2020/Group-Backend/internal"
-	"github.com/Solar-2020/Group-Backend/internal/clients/auth"
 	"github.com/Solar-2020/Group-Backend/internal/services/group"
 	"github.com/Solar-2020/Group-Backend/internal/storages/groupStorage"
 	"github.com/kelseyhightower/envconfig"
 	_ "github.com/lib/pq"
 	"github.com/rs/zerolog"
 	"github.com/valyala/fasthttp"
+	"net/url"
 	"os"
 	"os/signal"
 	"syscall"
@@ -47,18 +45,13 @@ func main() {
 	groupService := group.NewService(groupStorage, accountClient, errorWorker)
 	groupTransport := group.NewTransport()
 
-	authService := authapi.AuthClient{
-		Addr: internal.Config.AuthServiceAddress,
-	}
-	session.RegisterAuthService(&authService)
-	accountService := asapi.AccountClient{
-		Addr: internal.Config.AccountServiceAddress,
-	}
-	session.RegisterAccountService(&accountService)
-
 	groupHandler := groupHandler.NewHandler(groupService, groupTransport, errorWorker)
-
-	authClient := auth.NewClient(internal.Config.AuthServiceAddress, internal.Config.ServerSecret)
+	authURL, err := url.ParseRequestURI(internal.Config.AuthServiceAddress)
+	if err != nil {
+		log.Fatal().Msg(err.Error())
+		return
+	}
+	authClient := auth.NewClient(authURL.Host, internal.Config.ServerSecret)
 	middlewares := handlers.NewMiddleware(&log, authClient)
 
 	server := fasthttp.Server{

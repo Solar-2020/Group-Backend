@@ -9,6 +9,8 @@ ENV GO111MODULE=on \
 # Move to working directory /build
 WORKDIR /build
 
+RUN apk add --no-cache git
+
 # Copy and download dependency using go mod
 COPY go.mod .
 COPY go.sum .
@@ -35,6 +37,7 @@ RUN apk --no-cache add curl
 COPY --from=builder /dist/main /
 
 ADD ./scripts/run.sh /run.sh
+ADD ./templates /templates
 
 ENV GIT_BRANCH="main"
 ENV SERVICE_NAME="default"

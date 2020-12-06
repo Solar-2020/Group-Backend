@@ -4,6 +4,11 @@ import (
 	account "github.com/Solar-2020/Account-Backend/pkg/models"
 	"github.com/Solar-2020/Group-Backend/internal/models"
 	group "github.com/Solar-2020/Group-Backend/pkg/models"
+	"github.com/pkg/errors"
+)
+
+var (
+	ErrorInternalServer = errors.New("Внутрення ошибка сервиса, повторите попытку позже")
 )
 
 type groupStorage interface {
@@ -29,6 +34,7 @@ type groupStorage interface {
 type accountClient interface {
 	GetUserByUid(userID int) (user account.User, err error)
 	GetUserByEmail(email string) (user account.User, err error)
+	CreateUserAdvance(request account.UserAdvance) (user account.User, err error)
 }
 
 type errorWorker interface {

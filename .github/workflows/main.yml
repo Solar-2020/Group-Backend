@@ -15,8 +15,8 @@ jobs:
         run: echo ${{ secrets.DOCKERHUB_PASSWORD }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
       - name: Branch name
         run: echo running on branch ${GITHUB_REF##*/}
-      - name: Pregen code
-        run: chmod +x scripts/change_mods.sh && ./scripts/change_mods.sh ${GITHUB_REF##*/}
+#      - name: Pregen code
+#        run: chmod +x scripts/change_mods.sh && ./scripts/change_mods.sh ${GITHUB_REF##*/}
       - name: Build Docker image
         run: docker build -t tamerlanchik/solar_${SERVICE}_${GITHUB_REF##*/}:${GITHUB_SHA}  -t tamerlanchik/solar_${SERVICE}_${GITHUB_REF##*/}:latest .
       - name: Push the image
@@ -30,9 +30,12 @@ jobs:
         uses: appleboy/ssh-action@master
         env:
           DB_ROOT: ${{ secrets.DB_CONNECT_ROOT }}
+          MAIL_PWD: ${{ secrets.INVITE_MAIL_PASSWORD }}
         with:
-          envs: GITHUB_SHA, GITHUB_REF, SERVICE, DB_ROOT
+          envs: GITHUB_SHA, GITHUB_REF, SERVICE, DB_ROOT, MAIL_PWD
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.PRIVATE_KEY }}
-          script: sudo FACTER_image_tag=${GITHUB_SHA} FACTER_db_root=${DB_ROOT} /opt/puppetlabs/bin/puppet apply -t --tags gobackend::${SERVICE}::${GITHUB_REF##*/} /etc/puppetlabs/code/environments/production/manifests/site.pp; [[ "02" == *"${PIPESTATUS[0]}"* ]]
+          script: sudo
+            FACTER_image_tag=${GITHUB_SHA} FACTER_db_root=${DB_ROOT} FACTER_invite_mail_pwd=${MAIL_PWD}
+            /opt/puppetlabs/bin/puppet apply -t --tags gobackend::${SERVICE}::${GITHUB_REF##*/} /etc/puppetlabs/code/environments/production/manifests/site.pp; [[ "02" == *"${PIPESTATUS[0]}"* ]]

@@ -313,7 +313,7 @@ func (t transport) InviteDecode(ctx *fasthttp.RequestCtx) (request models.Invite
 		}
 	}
 	err = t.validator.Struct(request)
-
+	//request.CreatorID =280
 	request.CreatorID, ok = ctx.UserValue("userID").(int)
 	if ok {
 		return
@@ -352,6 +352,9 @@ func (t transport) ResolveDecode(ctx *fasthttp.RequestCtx) (request models.Resol
 	link := ctx.QueryArgs().Peek("link")
 	if link != nil {
 		request.Link = string(link)
+	}
+	if tempInt := ctx.UserValue("userID"); tempInt != nil {
+		request.UserID = tempInt.(int)
 	}
 	return
 }
