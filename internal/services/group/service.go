@@ -217,13 +217,13 @@ func (s *service) Invite(request models.InviteUserRequest) (response models.Invi
 	//addedUsers := make([]string, 0, len(request.UserID))
 	addedUsersID := make([]int, 0, len(request.UserID))
 
-	for i, userId := range request.UserID {
+	for _, userId := range request.UserID {
 		err_ := s.groupStorage.InsertUser(request.Group, userId, int(request.Role))
 		if err_ != nil {
 			if err == nil {
 				err = fmt.Errorf("")
 			}
-			err = fmt.Errorf("%s; %s", err, fmt.Sprintf("[%d]: %s", i, err_))
+			err = s.errorWorker.NewError(400, errors.New("пользователь уже добавлен"), err)
 		} else {
 			addedUsersID = append(addedUsersID, userId)
 		}
